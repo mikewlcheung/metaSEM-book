@@ -1,0 +1,344 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:  Mediation model on the "true" effect sizes
+  DATA:   FILE IS wvs94a.dat;	
+  VARIABLE: NAMES y1 y2 y1f1 y1f2 y2f2 GNP;
+      USEVARIABLES ARE ALL;
+      MISSING ARE *;
+
+  ANALYSIS: TYPE=RANDOM;
+      ESTIMATOR=ML;          ! Use ML estimation
+      ALGORITHM=INTEGRATION;
+      PROCESSORS=4;          ! Use 4 processors to speed up the analysis
+      INTEGRATION=100;       ! Number of points for integration
+      CHOLESKY=ON;           ! Ensure the variances are positive definite
+
+  MODEL:
+      f_LS | y1 ON y1f1;
+      f_LC | y1 ON y1f2;
+      f_LC | y2 ON y2f2;
+
+      [y1@0.0];              ! Intercept fixed at 0
+      [y2@0.0];              ! Intercept fixed at 0
+
+      y1@1.0                 ! Error variance fixed at 1
+      y2@1.0                 ! Error variance fixed at 1
+
+      y1 WITH y2@0;          ! Covariance fixed at 0
+
+      f_LS*;                 ! tau^2_11
+      f_LC*;                 ! tau^2_22
+
+      [f_LS*];               ! beta_10
+      [f_LC*];               ! beta_20
+
+      f_LC WITH GNP;
+
+      omega | f_LC XWITH GNP; ! Interaction between f_LC and GNP
+
+      f_LS ON GNP f_LC omega;
+
+  OUTPUT: SAMPSTAT;
+      CINTERVAL(symmetric); ! Wald CI
+
+
+
+*** WARNING
+  Data set contains cases with missing on variables used to define
+  interactions.  These cases were not included in the analysis.
+  Number of such cases:  5
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+Mediation model on the "true" effect sizes
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          37
+
+Number of dependent variables                                    2
+Number of independent variables                                  4
+Number of continuous latent variables                            3
+
+Observed dependent variables
+
+  Continuous
+   Y1          Y2
+
+Observed independent variables
+   Y1F1        Y1F2        Y2F2        GNP
+
+Continuous latent variables
+   OMEGA       F_LS        F_LC
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                 100
+  Dimensions of numerical integration                            2
+  Adaptive quadrature                                           ON
+Cholesky                                                        ON
+
+Input data file(s)
+  wvs94a.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT FOR Y
+
+
+           Covariance Coverage
+              Y1            Y2            GNP           Y1F1          Y1F2
+              ________      ________      ________      ________      ________
+ Y1             1.000
+ Y2             1.000         1.000
+ GNP            1.000         1.000         1.000
+ Y1F1           1.000         1.000         1.000         1.000
+ Y1F2           1.000         1.000         1.000         1.000         1.000
+ Y2F2           1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              Y2F2
+              ________
+ Y2F2           1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              Y1            Y2            GNP           Y1F1          Y1F2
+              ________      ________      ________      ________      ________
+ 1             -0.417         1.333         0.000        19.550        -6.994
+
+
+           Means
+              Y2F2
+              ________
+ 1             17.967
+
+
+           Covariances
+              Y1            Y2            GNP           Y1F1          Y1F2
+              ________      ________      ________      ________      ________
+ Y1             2.068
+ Y2             0.408         4.098
+ GNP           -0.182        -0.577         0.919
+ Y1F1           1.431         1.965        -0.085        25.393
+ Y1F2          -1.343         0.256         0.011       -14.293        10.753
+ Y2F2           1.104         2.130        -0.133        21.207       -11.083
+
+
+           Covariances
+              Y2F2
+              ________
+ Y2F2          18.014
+
+
+           Correlations
+              Y1            Y2            GNP           Y1F1          Y1F2
+              ________      ________      ________      ________      ________
+ Y1             1.000
+ Y2             0.140         1.000
+ GNP           -0.132        -0.297         1.000
+ Y1F1           0.197         0.193        -0.018         1.000
+ Y1F2          -0.285         0.038         0.003        -0.865         1.000
+ Y2F2           0.181         0.248        -0.033         0.992        -0.796
+
+
+           Correlations
+              Y2F2
+              ________
+ Y2F2           1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -356.598
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y1                   -0.417      -0.388      -3.948    2.70%      -1.426     -0.632     -0.347
+              37.000       2.068       0.085       2.260    2.70%      -0.174      0.641
+     Y2                    1.333       0.144      -3.224    2.70%      -0.435      0.686      1.052
+              37.000       4.098      -0.484       5.284    2.70%       1.541      3.290
+     GNP                   0.000       0.470      -1.061    2.70%      -0.896     -0.776     -0.600
+              37.000       0.919      -1.229       2.178    2.70%       0.464      1.089
+     Y1F1                 19.550       1.026       9.141    2.70%      16.206     16.782     17.431
+              37.000      25.393       1.514      35.882    2.70%      18.517     23.668
+     Y1F2                 -6.994      -0.827     -16.011    2.70%      -9.358     -7.290     -6.439
+              37.000      10.753       0.909       0.040    2.70%      -6.083     -4.558
+     Y2F2                 17.967       0.944       8.564    2.70%      15.408     15.790     16.006
+              37.000      18.014       1.559      31.616    2.70%      17.412     21.125
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       10
+
+Loglikelihood
+
+          H0 Value                        -192.134
+
+Information Criteria
+
+          Akaike (AIC)                     404.267
+          Bayesian (BIC)                   420.376
+          Sample-Size Adjusted BIC         389.122
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ F_LS       ON
+    F_LC               0.473      0.170      2.783      0.005
+    OMEGA              0.071      0.171      0.417      0.677
+
+ F_LS       ON
+    GNP               -0.010      0.018     -0.575      0.565
+
+ F_LC     WITH
+    GNP               -0.035      0.018     -1.888      0.059
+
+ Y1       WITH
+    Y2                 0.000      0.000    999.000    999.000
+
+ Means
+    GNP                0.000      0.158      0.000      1.000
+    F_LC               0.070      0.018      3.895      0.000
+
+ Intercepts
+    Y1                 0.000      0.000    999.000    999.000
+    Y2                 0.000      0.000    999.000    999.000
+    F_LS              -0.030      0.019     -1.569      0.117
+
+ Variances
+    GNP                0.919      0.214      4.301      0.000
+    F_LC               0.009      0.003      3.119      0.002
+
+ Residual Variances
+    Y1                 1.000      0.000    999.000    999.000
+    Y2                 1.000      0.000    999.000    999.000
+    F_LS               0.003      0.001      2.047      0.041
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.620E-05
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ F_LS     ON
+    F_LC             0.035       0.140       0.193       0.473       0.752       0.805       0.910
+    OMEGA           -0.370      -0.264      -0.210       0.071       0.353       0.407       0.512
+
+ F_LS     ON
+    GNP             -0.055      -0.044      -0.039      -0.010       0.019       0.024       0.035
+
+ F_LC     WITH
+    GNP             -0.082      -0.071      -0.065      -0.035      -0.004       0.001       0.013
+
+ Y1       WITH
+    Y2               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Means
+    GNP             -0.406      -0.309      -0.259       0.000       0.259       0.309       0.406
+    F_LC             0.024       0.035       0.041       0.070       0.100       0.106       0.117
+
+ Intercepts
+    Y1               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    Y2               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    F_LS            -0.078      -0.066      -0.060      -0.030       0.001       0.007       0.019
+
+ Variances
+    GNP              0.369       0.500       0.568       0.919       1.271       1.338       1.470
+    F_LC             0.002       0.003       0.004       0.009       0.013       0.014       0.016
+
+ Residual Variances
+    Y1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y2               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    F_LS            -0.001       0.000       0.001       0.003       0.005       0.005       0.006
+
+
+     Beginning Time:  17:11:40
+        Ending Time:  17:11:49
+       Elapsed Time:  00:00:09
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

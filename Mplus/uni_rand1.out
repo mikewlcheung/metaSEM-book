@@ -1,0 +1,218 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:  Random-effects model: Single level approach
+  DATA:   FILE IS Jaramillo05.dat;	
+  VARIABLE: NAMES id r r_v IDV OC_alpha JP_alpha;
+          USEVARIABLES ARE r w2;  ! Use both r and w2 in the analysis
+          MISSING ARE *;
+
+  DEFINE: w2 = SQRT(r_v**(-1));   ! Weight for transformation
+          r = w2*r;               ! Transformed r
+
+  ANALYSIS: TYPE=RANDOM;          ! Use random slopes analysis
+            ESTIMATOR=ML;         ! Use ML estimation
+
+  MODEL:	
+          [r@0.0];                ! Intercept fixed at 0
+          r@1.0;                  ! Error variance fixed at 1
+          f | r ON w2;            ! f: Study specific random effects
+          f*;                     ! var(f): tau^2
+          [f*];                   ! mean(f): Average effect size beta_R
+
+  OUTPUT: SAMPSTAT;
+          CINTERVAL(symmetric);   ! Wald CI
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+Random-effects model: Single level approach
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          61
+
+Number of dependent variables                                    1
+Number of independent variables                                  1
+Number of continuous latent variables                            1
+
+Observed dependent variables
+
+  Continuous
+   R
+
+Observed independent variables
+   W2
+
+Continuous latent variables
+   F
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  Jaramillo05.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              R             W2
+              ________      ________
+ R              1.000
+ W2             1.000         1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              R             W2
+              ________      ________
+ 1              2.833        15.065
+
+
+           Covariances
+              R             W2
+              ________      ________
+ R              7.322
+ W2             7.809        33.574
+
+
+           Correlations
+              R             W2
+              ________      ________
+ R              1.000
+ W2             0.498         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -332.306
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     R                     2.833       1.989      -1.114    1.64%       0.629      1.854      2.321
+              61.000       7.322       6.934      15.860    1.64%       2.803      4.590
+     W2                   15.065       1.050       6.505    1.64%      10.193     13.107     13.915
+              61.000      33.574       1.295      35.244    1.64%      15.454     19.254
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        2
+
+Loglikelihood
+
+          H0 Value                        -133.494
+
+Information Criteria
+
+          Akaike (AIC)                     270.987
+          Bayesian (BIC)                   275.209
+          Sample-Size Adjusted BIC         268.917
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ Means
+    F                  0.187      0.019      9.654      0.000
+
+ Intercepts
+    R                  0.000      0.000    999.000    999.000
+
+ Variances
+    F                  0.017      0.004      4.119      0.000
+
+ Residual Variances
+    R                  1.000      0.000    999.000    999.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.293E-01
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ Means
+    F                0.137       0.149       0.155       0.187       0.218       0.225       0.236
+
+ Intercepts
+    R                0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Variances
+    F                0.006       0.009       0.010       0.017       0.024       0.025       0.028
+
+ Residual Variances
+    R                1.000       1.000       1.000       1.000       1.000       1.000       1.000
+
+
+     Beginning Time:  17:11:40
+        Ending Time:  17:11:40
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

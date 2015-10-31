@@ -1,0 +1,22 @@
+TITLE:  Fixed-effects model
+DATA:   FILE IS wvs94a.dat;
+VARIABLE: NAMES y1 y2 y1f1 y1f2 y2f2 GNP;
+    USEVARIABLES ARE y1 y2 y1f1 y1f2 y2f2;
+    MISSING ARE *;
+
+
+MODEL:
+    y1 ON y1f1;            ! beta_{F,1} in the figure
+    y1 ON y1f2 (1);        ! beta_{F,2} in the figure
+    y2 ON y2f2 (1);        ! beta_{F,2} in the figure
+
+    [y1@0.0];              ! Intercept fixed at 0
+    [y2@0.0];              ! Intercept fixed at 0
+
+    y1@1.0                 ! Error variance fixed at 1
+    y2@1.0                 ! Error variance fixed at 1
+    
+    y1 WITH y2@0;          ! Covariance fixed at 0
+
+OUTPUT: SAMPSTAT;
+    CINTERVAL(symmetric);  ! Wald CI

@@ -1,0 +1,2282 @@
+---
+title: 'Meta-Analysis: A Structural Equation Modeling Approach'
+author: "Mike Cheung"
+date: "31 Oct 2015"
+output:
+  html_document:
+    self_contained: yes
+    theme: united
+    toc: yes
+    keep_md: true
+---
+
+![Cover of the book](./cover.png)
+
+* This page collects the R code and Mplus input files used in Cheung (2015):
+* Cheung, M. W.-L. (2015). *Meta-analysis: A structural equation modeling approach*. Chichester, West Sussex: [John Wiley & Sons, Ltd](http://www.wiley.com/WileyCDA/WileyTitle/productCd-1119993431.html).
+* If you have any questions or comments, feel free to contact [me](http://courses.nus.edu.sg/course/psycwlm/Internet/).
+
+# Chapter 3: Computing Effect Sizes for Meta-Analysis
+
+## Repeated measures
+
+```{r, message=FALSE}
+###################################################
+### code chunk number 2: RM1
+###################################################
+## Library for the SEM
+library("lavaan")
+
+## Sample covariance matrix on pre- and post-test scores
+lower <- '10
+          8 12'
+( Cov <- getCov(lower, diag=TRUE, names=c("x_pre","x_post")) )
+
+## Sample means for the pre- and post-test scores
+Mean <- c(10, 13)
+
+## Sample size
+N <- 50
+
+model1 <- '# Label the sds with sd_pre and sd_post
+           eta_pre =~ sd_pre*x_pre
+           eta_post =~ sd_post*x_post
+           # r: correlation betwen pre- and post-test
+           eta_pre ~~ r*eta_post
+           # Fix the error variances at 0
+           x_pre ~~ 0*x_pre
+           x_post ~~ 0*x_post
+           # Label the means with m_pre and m_post 
+           x_pre ~ m_pre*1
+           x_post ~ m_post*1
+           # Calculate the effect sizes
+           # Diff: change score
+           Diff := m_post - m_pre
+           # SMD.cs sd on change score as the standardizer
+           SMD.cs := (m_post - m_pre)/sqrt(sd_pre^2+sd_post^2
+                      -2*sd_pre*sd_post*r)
+           # SMD.pre: sd_pre as the standardizer
+           SMD.pre := (m_post - m_pre)/sd_pre'
+
+## Fit the model
+fit1 <- cfa(model1, sample.cov=Cov, sample.mean=Mean, 
+            sample.nobs=N, std.lv=TRUE, 
+            sample.cov.rescale=FALSE)
+
+## Display the summary
+## summary(fit1)
+
+## Display the selected output
+parameterEstimates(fit1)[c(12,13,14), -c(1,2,3)]
+
+
+###################################################
+### code chunk number 4: RM3
+###################################################
+model2 <- '# Label the common sd
+           eta_pre =~ sd*x_pre
+           eta_post =~ sd*x_post
+           # r: correlation betwen pre- and post-test
+           eta_pre ~~ r*eta_post
+           # Fix the error variances at 0
+           x_pre ~~ 0*x_pre
+           x_post ~~ 0*x_post
+           # Label the means with m_pre and m_post 
+           x_pre ~ m_pre*1
+           x_post ~ m_post*1
+           # Calculate the effect sizes
+           # Common sd
+           SMD.common := (m_post-m_pre)/sd'
+
+## Fit the model
+fit2 <- cfa(model2, sample.cov=Cov, sample.mean=Mean, 
+            sample.nobs=N, std.lv=TRUE, 
+            sample.cov.rescale=FALSE)
+
+## Display the selected output
+parameterEstimates(fit2)[12, -c(1,2,3)]
+```
+
+## Multiple treatment studies
+```{r}
+###################################################
+### code chunk number 6: MT1
+###################################################
+## Group 1 (control group): variance 
+var1 <- matrix(10, dimnames=list("x","x"))
+## Group 2 (treatment 1): variance 
+var2 <- matrix(11, dimnames=list("x","x"))
+## Group 3 (treatment 2): variance 
+var3 <- matrix(12, dimnames=list("x","x"))
+
+## Convert variances into a list
+Var <- list(var1, var2, var3)
+
+## Means for the groups
+Mean <- list(5, 7, 9)
+
+## Sample sizes for the groups
+N <- c(50, 52, 53)
+
+## Assuming homogeneity of variances by using the same label "s2"
+model3 <- 'x ~~ c("s2", "s2", "s2")*x
+           x ~ c("m1", "m2", "m3")*1
+           # SMD for treatment 1
+           MT1 := (m2-m1)/sqrt(s2)
+           # SMD for treatment 2
+           MT2 := (m3-m1)/sqrt(s2)'
+
+fit3 <- sem(model3, sample.cov=Var, sample.mean=Mean, 
+            sample.nobs=N, sample.cov.rescale=FALSE)
+
+## Obtain the free parameters in the model
+( x <- fit3@Fit@x )
+
+## Obtain the sampling covariance matrix of the parameter estimates
+( VCOV <- vcov(fit3) )
+
+## Compute the multiple effect sizes
+( MT <- fit3@Model@def.function(.x.=x) )
+
+## Compute the jacobian for the 'defined parameters'
+JAC <- lavaan:::lavJacobianD(func=fit3@Model@def.function, x=x)
+
+## Compute the sampling covariance matrix using delta method
+MT.VCOV <- JAC %*% VCOV %*% t(JAC)
+## Add the variable names for ease of reference
+dimnames(MT.VCOV) <- list(names(MT), names(MT))
+MT.VCOV
+```
+
+## Multiple-endpoint studies
+```{r}
+###################################################
+### code chunk number 7: ME1
+###################################################
+lower <- '11          
+          5, 10'
+## Convert a lower triangle data into a covariance matrix
+Cov1 <- getCov(lower, diag=TRUE, names=c("x1", "x2"))
+
+lower <- '12          
+          6, 11'
+## Convert a lower triangle data into a covariance matrix
+Cov2 <- getCov(lower, diag=TRUE, names=c("x1", "x2"))
+
+## Convert covariance matrices into a list
+Cov <- list(Cov1, Cov2)
+
+## Means for the two groups
+Mean <- list(c(10,11), c(12,13))
+
+## Sample sizes for the groups
+N <- c(50, 50)
+
+## Assuming homogeneity of covariance matrices by
+## using the same labels: "sd1", "sd2", and "r"
+model4 <- 'eta1 =~ c("sd1", "sd1")*x1
+           eta2 =~ c("sd2", "sd2")*x2
+           eta1 ~~ c("r", "r")*eta2
+           x1 ~ c("m1_1", "m1_2")*1
+           x2 ~ c("m2_1", "m2_2")*1     
+           x1 ~~ 0*x1
+           x2 ~~ 0*x2
+           # Multiple endpoint effect size 1
+           ME1 := (m1_2 - m1_1)/sd1
+           # Multiple endpoint effect size 2
+           ME2 := (m2_2 - m2_1)/sd2'
+
+fit4 <- sem(model4, sample.cov=Cov, sample.mean=Mean, 
+            sample.nobs=N, std.lv=TRUE, 
+            sample.cov.rescale=FALSE)
+
+## Obtain the free parameters in the model
+( x <- fit4@Fit@x )
+
+## Obtain the sampling covariance matrix of the parameter estimates
+( VCOV <- vcov(fit4) )
+
+## Compute the multivariate effect sizes
+( ME <- fit4@Model@def.function(.x.=x) )
+
+## Compute the jacobian for 'defined parameters'
+JAC <- lavaan:::lavJacobianD(func=fit4@Model@def.function, x=x)
+
+## Compute the sampling covariance matrix using delta method
+ME.VCOV <- JAC %*% VCOV %*% t(JAC)
+## Add the variable names for ease of reference
+dimnames(ME.VCOV) <- list(names(ME), names(ME))
+ME.VCOV
+```
+
+## Multiple treatment with multiple-endpoint studies
+
+```{r}
+###################################################
+### code chunk number 8: ME_MT
+###################################################
+## Covariance matrix of the control group
+lower <- '11          
+          5, 10'
+## Convert a lower triangle data into a covariance matrix
+Cov1 <- getCov(lower, diag=TRUE, names=c("x1", "x2"))
+
+## Covariance matrix of the treatment group 1
+lower <- '12          
+          6, 11'
+Cov2 <- getCov(lower, diag=TRUE, names=c("x1", "x2"))
+
+## Covariance matrix of the treatment group 2
+lower <- '13          
+          7, 12'
+Cov3 <- getCov(lower, diag=TRUE, names=c("x1", "x2"))
+
+## Convert covariance matrices into a list
+Cov <- list(Cov1, Cov2, Cov3)
+
+## Means for the three groups
+## 10 and 11 are the means for variables 1 and 2
+Mean <- list(c(10,11), c(12,13), c(13,14))
+
+## Sample sizes for the groups
+N <- c(50, 50, 50)
+
+## Assuming homogeneity of covariance matrices
+model5 <- 'eta1 =~ c("sd1", "sd1", "sd1")*x1
+           eta2 =~ c("sd2", "sd2", "sd2")*x2
+           eta1 ~~ c("r", "r", "r")*eta2
+           ## The subscripts 0, 1 and 2 represent the means
+           ##  of the control and two  treatment groups
+           x1 ~ c("m1_0", "m1_1", "m1_2")*1
+           x2 ~ c("m2_0", "m2_1", "m2_2")*1
+           ## The measurement errors are fixed at 0
+           x1 ~~ 0*x1
+           x2 ~~ 0*x2
+           ## Multiple endpoint effect size 1 for treatment group 1
+           ES1_1 := (m1_1 - m1_0)/sd1
+           ## Multiple endpoint effect size 2 for treatment group 1
+           ES2_1 := (m2_1 - m2_0)/sd2
+           ## Multiple endpoint effect size 1 for treatment group 2
+           ES1_2 := (m1_2 - m1_0)/sd1
+           ## Multiple endpoint effect size 2 for treatment group 2
+           ES2_2 := (m2_2 - m2_0)/sd2'
+
+fit5 <- sem(model5, sample.cov=Cov, sample.mean=Mean, 
+            sample.nobs=N, std.lv=TRUE, 
+            sample.cov.rescale=FALSE)
+
+## Obtain the free parameters in the model
+( x <- fit5@Fit@x )
+
+## Obtain the sampling covariance matrix of the parameter estimates
+VCOV <- vcov(fit5)
+
+## Compute the multivariate effect sizes
+( ES <- fit5@Model@def.function(.x.=x) )
+
+## Compute the jacobian for 'defined parameters'
+JAC <- lavaan:::lavJacobianD(func=fit5@Model@def.function, x=x)
+
+## Compute the sampling covariance matrix using delta method
+ES.VCOV <- JAC %*% VCOV %*% t(JAC)
+## Add the variable names for ease of reference
+dimnames(ES.VCOV) <- list(names(ES), names(ES))
+ES.VCOV
+```
+
+## Correlation matrix
+
+```{r, message=FALSE}
+###################################################
+### code chunk number 9: CM1
+###################################################
+library("metaSEM")
+
+## Sample correlation matrix
+( C1 <- matrix(c(1,0.5,0.4,0.5,1,0.2,0.4,0.2,1), ncol=3,
+               dimnames=list(c("x1","x2","x3"), 
+                             c("x1","x2","x3"))) )
+
+
+###################################################
+### code chunk number 10: CM2
+###################################################
+## Standard deviations
+SD <- diag(c(1.2, 1.3, 1.4))
+
+## Convert the correlation matrix to a covariance matrix
+C2 <- SD %*% C1 %*% SD
+dimnames(C2) <- list(c("x1","x2","x3"), 
+                     c("x1","x2","x3"))
+C2
+
+
+###################################################
+### code chunk number 11: CM3
+###################################################
+## Calculate the sampling covariance matrix of
+## the correlation matrix with n=50
+asyCov(C2, n=50)
+
+
+###################################################
+### code chunk number 12: CM4
+###################################################
+## Calculate the sampling covariance matrix of
+## the covariance matrix with n=50
+asyCov(C2, n=50, cor.analysis=FALSE)
+```
+
+# Chapter 4: Univariate Meta-Analysis
+
+## Odds ratio of atrial fibril lation between bisphosphonate and non-bisphosphonate users
+
+```{r}
+###################################################
+### code chunk number 2: Mak1
+###################################################
+## Display the full dataset
+Mak09
+
+
+###################################################
+### code chunk number 3: Mak2 
+###################################################
+mak1 <- meta(y=yi, v=vi, data=Mak09)
+summary(mak1)
+#### Alternative specification without storing the results
+summary( meta(y=yi, v=vi, data=Mak09) )
+
+
+###################################################
+### code chunk number 5: Mak4
+###################################################
+( mak2 <- summary(meta(y=yi, v=vi, data=Mak09, RE.constraints=0)) )
+#### Alternative specification
+( mak2 <- summary(meta(y=yi, v=vi, data=Mak09,
+                   RE.constraints=matrix(0, ncol=1, nrow=1))) )
+
+
+###################################################
+### code chunk number 7: Mak6
+###################################################
+## Get the estimate and its 95% CI
+( Est <- mak2$coefficients["Intercept1", 
+                          c("Estimate","lbound","ubound")] )
+## Convert them into odds ratio
+exp(Est)
+```
+
+## Correlation between organizational commitment and salesperson job performance
+
+```{r}
+###################################################
+### code chunk number 8: Jaramillo1
+###################################################
+head(Jaramillo05)
+
+
+###################################################
+### code chunk number 9: Jaramillo2 (eval = FALSE)
+###################################################
+## z <- with( Jaramillo05, 0.5*log((1+r)/(1-r)) )
+## z.v <- with( Jaramillo05, 1/(Sample.size-3) )
+
+
+###################################################
+### code chunk number 10: Jaramillo3
+###################################################
+summary( meta(y=r, v=r_v, data=Jaramillo05) )
+
+
+###################################################
+### code chunk number 12: Jaramillo5
+###################################################
+summary( meta(y=r, v=r_v, data=Jaramillo05, intervals.type="LB") )
+
+
+###################################################
+### code chunk number 14: Jaramillo7 
+###################################################
+## Center IND: scale(IND, scale=FALSE)
+##  scale=TRUE: standardize the variable
+##  scale=FALSE: not standardize the variable
+model0 <- meta(y=r, v=r_v, x=scale(IDV, scale=FALSE), 
+              data=Jaramillo05)
+
+summary(model0)
+
+###################################################
+### code chunk number 16: Jaramillo9 
+###################################################
+model1 <- meta(y=r, v=r_v, x=cbind(OC_alpha, JP_alpha), 
+               data=Jaramillo05,
+               model.name="Unequal coefficients")
+summary(model1)
+
+
+###################################################
+### code chunk number 18: Jaramillo11a
+###################################################
+( constraint <- matrix(c("0*Slope_equal", "0*Slope_equal"), 
+                       nrow=1, ncol=2) )
+
+
+###################################################
+### code chunk number 19: Jaramillo11b
+###################################################
+model2 <- meta(y=r, v=r_v, x=cbind(OC_alpha, JP_alpha), 
+               data=Jaramillo05, coef.constraints=constraint, 
+               model.name="Equal coefficients")
+summary(model2)
+
+
+###################################################
+### code chunk number 21: Jaramillo11
+###################################################
+anova(model1, model2)
+
+
+###################################################
+### code chunk number 23: Jaramillo14
+###################################################
+table(Jaramillo05$Sales)
+sales <- ifelse(Jaramillo05$Sales=="sales", yes=1, no=0)
+nonsales <- ifelse(Jaramillo05$Sales=="nonsales", yes=1, no=0)
+mixed <- ifelse(Jaramillo05$Sales=="mixed", yes=1, no=0)
+
+
+###################################################
+### code chunk number 24: Jaramillo15a
+###################################################
+( startvalues <- matrix(c("0*Slope1_1", "0*Slope1_2", 
+                          "0*Slope1_3"), nrow=1, ncol=3) )
+
+
+###################################################
+### code chunk number 25: Jaramillo15b
+###################################################
+model3 <- meta(y=r, v=r_v, x=cbind(sales, mixed, nonsales), 
+               data=Jaramillo05, coef.constraints=startvalues,
+               intercept.constraints=matrix(0, ncol=1, nrow=1),               
+               model.name="Indicator variables")
+summary(model3)
+
+
+###################################################
+### code chunk number 27: Jaramillo17
+###################################################
+model4 <- meta(y=r, v=r_v, data=Jaramillo05)
+anova(model3, model4)
+```
+
+
+# Chapter 5: Multivariate Meta-Analysis
+
+## BCG vaccine for preventing tuberculosis
+
+```{r, message=FALSE}
+###################################################
+### code chunk number 2: BCG1
+###################################################
+#### Load the metaSEM library
+library("metaSEM")
+## Display the dataset
+head(BCG)
+
+
+###################################################
+### code chunk number 3: BCG2
+###################################################
+## Covariance between the effect size is 0.
+bcg1 <- meta(y=cbind(ln_Odd_V, ln_Odd_NV), 
+             v=cbind(v_ln_Odd_V, cov_V_NV, v_ln_Odd_NV),
+             data=BCG, model.name="Random effects model") 
+summary(bcg1)
+
+
+###################################################
+### code chunk number 5: BCG4
+###################################################
+bcg2 <- meta(y=cbind(ln_Odd_V, ln_Odd_NV), data=BCG,
+             v=cbind(v_ln_Odd_V, cov_V_NV, v_ln_Odd_NV),
+             intercept.constraints=c("0*Intercept","0*Intercept"),
+             model.name="Equal intercepts") 
+summary(bcg2)
+
+
+###################################################
+### code chunk number 7: BCG6
+###################################################
+anova(bcg1, bcg2)
+
+
+###################################################
+### code chunk number 9: BCG7
+###################################################
+## Extract the coefficient table from the summary
+Est <- summary(bcg1)$coefficients
+
+## Only select the first 2 rows and the columns
+## related to estimate, lbound, and ubound
+## Convert them into odds
+exp( Est[1:2, c("Estimate", "lbound", "ubound") ] )
+
+
+###################################################
+### code chunk number 10: BCG8
+###################################################
+## Extract the fixed effects 
+( fixed <- coef(bcg1, select="fixed") )
+
+## Extract the sampling covariance matrix on the estimates
+( omega <- vcov(bcg1)[c("Intercept1","Intercept2"), 
+                      c("Intercept1","Intercept2")] )
+
+## Calculate the logarithm on the odds ratio
+( log_OR <- fixed[1] - fixed[2] )
+
+## Calculate the standard error on log_OR
+( se_log_OR <- sqrt(omega[1,1]+omega[2,2]-2*omega[2,1]) )
+
+
+###################################################
+### code chunk number 11: BCG9 
+###################################################
+summary( meta(y=ln_OR, v=v_ln_OR, data=BCG) )
+
+
+###################################################
+### code chunk number 13: BCG11
+###################################################
+bcg3 <- meta(y=cbind(ln_Odd_V, ln_Odd_NV), data=BCG,
+             v=cbind(v_ln_Odd_V, cov_V_NV, v_ln_Odd_NV),
+             RE.constraints=matrix(c("0.1*Tau2_Eq","0*Tau2_2_1",
+                                     "0*Tau2_2_1","0.1*Tau2_Eq"),
+                                   ncol=2, nrow=2),
+             model.name="Equal variances")
+summary(bcg3)
+
+
+###################################################
+### code chunk number 15: BCG13
+###################################################
+anova(bcg1, bcg3)
+
+
+###################################################
+### code chunk number 17: BCG15
+###################################################
+( T2 <- vec2symMat(coef(bcg1, select="random")) )
+
+
+###################################################
+### code chunk number 18: BCG16
+###################################################
+cov2cor(T2)
+
+
+###################################################
+### code chunk number 19: BCG17
+###################################################
+bcg.cor <- cov2cor(T2)[2,1]
+
+###################################################
+### code chunk number 20: BCG18 
+###################################################
+plot(bcg1, xlim=c(-8,0), ylim=c(-8,0))
+```
+
+```{r, message=FALSE, fig.height=8, fig.width=8}
+###################################################
+### code chunk number 21: BCG19
+###################################################
+## ## Load the metafor package
+library("metafor")
+plot(bcg1, xlim=c(-8,0), ylim=c(-8,0), diag.panel=TRUE)
+## Forest plot for the vaccinated group
+forest( rma(yi=ln_Odd_V, vi=v_ln_Odd_V, method="ML", data=BCG) )
+title("Forest plot for the vaccinated group")
+## Forest plot for the non-vaccinated group
+forest( rma(yi=ln_Odd_NV, vi=v_ln_Odd_NV, method="ML", data=BCG) )
+title("Forest plot for the non-vaccinated group")
+```
+
+## Standardized mean differences between males and females on life satisfaction and life control
+
+```{r}
+###################################################
+### code chunk number 22: wvs1
+###################################################
+## Display the dataset
+head(wvs94a)
+
+
+###################################################
+### code chunk number 23: wvs2 
+###################################################
+## Random-effects model
+wvs1 <- meta(y=cbind(lifesat, lifecon),
+             v=cbind(lifesat_var, inter_cov, lifecon_var), 
+             data=wvs94a, model.name="Random effects model")
+summary(wvs1)
+
+
+###################################################
+### code chunk number 25: wvs4
+###################################################
+## Extract the variance component of the random effects
+( T2 <- vec2symMat(coef(wvs1, select="random")) )
+
+
+###################################################
+### code chunk number 26: wvs5
+###################################################
+## Convert the covariance matrix to a correlation matrix
+cov2cor(T2)
+
+
+###################################################
+### code chunk number 27: wvs6
+###################################################
+wvs.cor <- cov2cor(T2)[2,1]
+
+
+###################################################
+### code chunk number 28: wvs7
+###################################################
+par(mfrow=c(1,1))
+plot(wvs1, axis.labels=c("SMD on life satisfaction", 
+                        "SMD on life control"),
+    study.ellipse.plot=FALSE,
+    xlim=c(-0.3, 0.2), ylim=c(-0.3,0.4))
+
+
+###################################################
+### code chunk number 29: wvs8
+###################################################
+## ## Random-effects model with both effect sizes fixed at 0
+wvs2 <- meta(y=cbind(lifesat, lifecon),
+             v=cbind(lifesat_var, inter_cov, lifecon_var), 
+             data=wvs94a,
+             intercept.constraints=matrix(0, nrow=1, ncol=2),
+             model.name="Both effect sizes fixed at 0")
+summary(wvs2)
+
+
+###################################################
+### code chunk number 31: wvs10
+###################################################
+## Compare the nested models
+anova(wvs1, wvs2)
+
+
+###################################################
+### code chunk number 33: wvs12 
+###################################################
+## ## Mixed-effects model
+## ## gnp is divided by 10000 and centered by using 
+## ## scale(gnp/10000, scale=FALSE)
+wvs3 <- meta(y=cbind(lifesat, lifecon),
+             v=cbind(lifesat_var, inter_cov, lifecon_var),
+             x=scale(gnp/10000, scale=FALSE), data=wvs94a,
+             model.name="GNP as a predictor")
+summary(wvs3)
+```
+
+## Mediation and moderation models
+
+```{r, error=TRUE}
+###################################################
+### code chunk number 35: reg1
+###################################################
+## Remove the missing values in gnp and exclude the first column "country"
+my.df <- wvs94a[!is.na(wvs94a$gnp), -1]
+
+## Center gnp and divide it by 10000 to 
+## improve numerical stability
+my.df$gnp <- scale(my.df$gnp, scale = FALSE)/10000
+
+head(my.df)
+
+
+###################################################
+### code chunk number 36: reg2
+###################################################
+## A: asymmetric paths for regression coefficients
+##    and factor loadings
+A <- matrix(c(0, "0.5*beta1_2", 0, 0, 
+              0, 0, 0, 0, 
+              1, 0, 0, 0,
+              0, 1, 0, 0), 
+            ncol=4, nrow=4, byrow=TRUE)
+dimnames(A) <- list(c("f_lifesat","f_lifecon","lifesat","lifecon"), 
+                    c("f_lifesat","f_lifecon","lifesat","lifecon"))
+## Show the content of A
+A
+## Convert it into OpenMx matrix
+A <- as.mxMatrix(A)
+
+
+###################################################
+### code chunk number 37: reg3
+###################################################
+## S: symmetric covariances and variances
+S <- mxMatrix(type="Symm", nrow=4, ncol=4, byrow=TRUE, 
+              free=c(TRUE, 
+                     FALSE,TRUE, 
+                     FALSE,FALSE,FALSE,
+                     FALSE,FALSE,FALSE,FALSE), 
+              values=c(0.01,
+                       0,0.01,
+                       0,0,0,
+                       0,0,0,0),
+              labels=c("tau2_1_1",
+                       NA,"tau2_2_2",
+                       NA,NA,"data.lifesat_var",
+                       NA,NA,"data.inter_cov","data.lifecon_var"), 
+              name = "S")
+## Show the labels of S
+S@labels
+
+
+###################################################
+### code chunk number 38: reg4
+###################################################
+## F: select observed variables
+F <- matrix(c(0, 0, 1, 0, 
+              0, 0, 0, 1), nrow = 2, ncol = 4, byrow = TRUE)
+dimnames(F) <- list(c("lifesat","lifecon"), 
+                    c("f_lifesat","f_lifecon","lifesat","lifecon"))
+## Show the content of F
+F
+F <- as.mxMatrix(F)
+
+
+###################################################
+### code chunk number 39: reg5
+###################################################
+## M: intercepts or means
+M <- matrix(c("0*beta1_0","0*beta2_0",0,0), nrow=1, ncol=4)
+dimnames(M)[[2]] <- c("f_lifesat","f_lifecon","lifesat","lifecon")
+M
+M <- as.mxMatrix(M)
+
+
+###################################################
+### code chunk number 40: reg6
+###################################################
+## Formula for R2
+R2 <- mxAlgebra(beta1_2^2*tau2_2_2/(beta1_2^2*tau2_2_2 + tau2_1_1),
+                name="R2")
+
+
+###################################################
+### code chunk number 41: reg7
+###################################################
+## Build the model
+reg <- mxModel("Regression", 
+               mxData(observed=my.df, type="raw"), 
+               A, S, F, M, R2, mxCI("R2"),
+               mxExpectationRAM(A="A", S="S", 
+                              F="F", M="M",                               
+               dimnames = c("f_lifesat","f_lifecon",
+                            "lifesat","lifecon")),
+               mxFitFunctionML())
+
+
+###################################################
+### code chunk number 42: reg8
+###################################################
+## Run the analysis
+reg.fit <- mxRun(reg, intervals=TRUE)
+
+## Check the status of the results
+reg.fit@output$status[[1]]
+
+
+###################################################
+### code chunk number 42: reg8
+###################################################
+## Rerun the analysis
+reg.fit <- mxRun(reg.fit, intervals=TRUE, silent=TRUE)
+
+## Check the status of the results
+reg.fit@output$status[[1]]
+
+###################################################
+### code chunk number 44: reg10
+###################################################
+summary(reg.fit)
+
+
+###################################################
+### code chunk number 46: med1
+###################################################
+A <- matrix(c(0,0,0,0,0,
+              "0*gamma1",0,"0*beta1_2",0,0,
+              "0*gamma2",0,0,0,0,
+              0,1,0,0,0,
+              0,0,1,0,0), ncol=5, nrow=5, byrow=TRUE)
+dimnames(A) <- list(c("gnp","f_lifesat","f_lifecon",
+                      "lifesat","lifecon"),
+                    c("gnp","f_lifesat","f_lifecon",
+                      "lifesat","lifecon"))
+A
+
+A <- as.mxMatrix(A)
+
+
+###################################################
+### code chunk number 47: med2
+###################################################
+S <- mxMatrix(type="Symm", nrow=5, ncol=5, byrow=TRUE,
+            free=c(TRUE,
+                   FALSE,TRUE,
+                   FALSE,FALSE,TRUE,
+                   FALSE,FALSE,FALSE,FALSE,
+                   FALSE,FALSE,FALSE,FALSE,FALSE),
+            values=c(1,
+                     0,0.01,
+                     0,0,0.1,
+                     0,0,0,0,
+                     0,0,0,0,0),
+            labels=c("sigma2_x",
+                     NA,"tau2_1_1",
+                     NA,NA,"tau2_2_2",
+                     NA,NA,NA,"data.lifesat_var",
+                     NA,NA,NA,"data.inter_cov","data.lifecon_var"),
+            name="S")
+S@labels
+
+
+###################################################
+### code chunk number 48: med3
+###################################################
+F <- matrix(c(1,0,0,0,0,
+              0,0,0,1,0,
+              0,0,0,0,1), nrow=3, ncol=5, byrow=TRUE)
+dimnames(F) <- list(c("gnp","lifesat","lifecon"),
+                    c("gnp","f_lifesat","f_lifecon",
+                      "lifesat","lifecon"))
+F
+
+F <- as.mxMatrix(F)
+
+
+###################################################
+### code chunk number 49: med4
+###################################################
+M <- matrix(c("0*mu_x","0*beta1_0","0*beta2_0",0,0),
+            nrow=1, ncol=5)
+dimnames(M)[[2]] <- c("gnp", "f_lifesat","f_lifecon",
+                      "lifesat","lifecon")
+M
+M <- as.mxMatrix(M)
+
+
+###################################################
+### code chunk number 50: med5
+###################################################
+## Define the direct effect
+direct <- mxAlgebra(gamma1, name="direct")
+
+## Define the indirect effect
+indirect <- mxAlgebra(gamma2*beta1_2, name="indirect")
+
+## Define the total effect
+total <- mxAlgebra(gamma1+gamma2*beta1_2, name="total")
+
+med <- mxModel("Mediation",
+               mxData(observed=my.df, type="raw"),
+               A, S, F, M, direct, indirect, total,
+               mxCI(c("direct","indirect","total")),
+               mxExpectationRAM(A="A", S="S", F="F", M="M", 
+               dimnames=c("gnp","f_lifesat","f_lifecon",
+                          "lifesat","lifecon")),
+               mxFitFunctionML()
+)
+
+
+###################################################
+### code chunk number 51: med6a 
+###################################################
+med.fit <- mxRun(med, intervals=TRUE) 
+
+
+###################################################
+### code chunk number 53: med6c
+###################################################
+med.fit@output$status[[1]]
+
+
+###################################################
+### code chunk number 54: med6d 
+###################################################
+summary(med.fit)
+
+
+###################################################
+### code chunk number 56: mod1
+###################################################
+A <- matrix(c(0,0,0,0,0,0,
+              "0*gamma1",0,"0*beta1_2",0,0,"0*omega1_2",
+              0,0,0,0,0,0,
+              0,1,0,0,0,0,
+              0,0,1,0,0,0,
+              0,0,"0*data_gnp",0,0,0),
+            ncol=6,nrow=6,byrow=TRUE)
+
+dimnames(A) <- list(c("gnp","f_lifesat","f_lifecon",
+                      "lifesat","lifecon","P"),
+                    c("gnp","f_lifesat","f_lifecon",
+                      "lifesat","lifecon","P"))
+A
+
+
+###################################################
+### code chunk number 57: mod2
+###################################################
+A <- as.mxMatrix(A)
+## Change the elements related to the definition variable
+## A[6,3] is fixed by the variable gnp in the data
+A@labels[6,3] <- "data.gnp"
+## A[6,3] is a fixed parameter
+A@free[6,3] <- FALSE
+A
+
+
+###################################################
+### code chunk number 58: mod3
+###################################################
+S <- mxMatrix(type="Symm", nrow=6, ncol=6, byrow=TRUE,
+             free=c(TRUE,
+                    FALSE,TRUE,
+                    TRUE,FALSE,TRUE,
+                    FALSE,FALSE,FALSE,FALSE,
+                    FALSE,FALSE,FALSE,FALSE,FALSE,
+                    FALSE,FALSE,FALSE,FALSE,FALSE,FALSE),
+             values=c(1,
+                      0,0.01,
+                      0,0,0.1,
+                      0,0,0,0,
+                      0,0,0,0,0,
+                      0,0,0,0,0,0),
+             labels=c("sigma2_x",
+                      NA,"tau2_1_1",
+                      "cov_x_lifecon",NA,"tau2_2_2",
+                      NA,NA,NA,"data.lifesat_var",
+                      NA,NA,NA,"data.inter_cov","data.lifecon_var",
+                      NA,NA,NA,NA,NA,NA),
+             name="S")
+S@labels
+
+
+###################################################
+### code chunk number 59: mod4
+###################################################
+F <- matrix(c(1,0,0,0,0,0,
+              0,0,0,1,0,0,
+              0,0,0,0,1,0), nrow=3, ncol=6, byrow=TRUE)
+dimnames(F) <- list(c("gnp","lifesat","lifecon"),
+                    c("gnp","f_lifesat","f_lifecon","lifesat",
+                      "lifecon","P"))
+F
+F <- as.mxMatrix(F)
+
+
+###################################################
+### code chunk number 60: mod5
+###################################################
+M <- matrix(c("0*mu_x","0*beta1_0","0*beta2_0",0,0,0),
+            nrow=1, ncol=6)
+dimnames(M)[[2]] <- c("gnp","f_lifesat","f_lifecon",
+                    "lifesat","lifecon","P")
+M
+
+M <- as.mxMatrix(M)
+
+
+###################################################
+### code chunk number 61: mod6
+###################################################
+mod <- mxModel("Moderator",
+               mxData(observed=my.df, type="raw"),
+               A, S, F, M,
+               mxCI("omega1_2"),
+               mxExpectationRAM(A="A", S="S", F="F", M="M",
+                   dimnames=c("gnp","f_lifesat","f_lifecon",
+                              "lifesat","lifecon","P")),
+               mxFitFunctionML()
+)
+
+
+###################################################
+### code chunk number 62: mod7
+###################################################
+mod.fit <- mxRun(mod, intervals=TRUE, silent=TRUE)
+## Check the optimization status
+mod.fit@output$status[[1]]
+
+
+###################################################
+### code chunk number 63: mod8 
+###################################################
+summary(mod.fit)
+```
+
+# Chapter 6: Three-Level Meta-Analysis
+
+```{r}
+###################################################
+### code chunk number 2: Bornmann1a
+###################################################
+## Show the first few cases in the data set
+head(Bornmann07)
+
+## Show the last few cases in the data set
+## tail(Bornmann07)
+
+
+###################################################
+### code chunk number 3: Bornmann1b
+###################################################
+## Display the no. of effect sizes per cluster
+t(aggregate(logOR~Cluster, data=Bornmann07, FUN=length))
+
+
+###################################################
+### code chunk number 4: Bornmann2a
+###################################################
+## ## Model 0: Random-effects model 
+summary( Model0 <- meta3(y=logOR, v=v, cluster=Cluster, 
+                         data=Bornmann07, model.name="3 level") )
+
+
+###################################################
+### code chunk number 6: Bornmann2c 
+###################################################
+## ## Model 0: Random-effects model with LBCI
+summary( meta3(y=logOR, v=v, cluster=Cluster, 
+               data=Bornmann07, model.name="3 level",
+               intervals.type="LB") )
+
+
+###################################################
+### code chunk number 8: Bornmann3a 
+###################################################
+## ## Model 1: Testing tau^2_3 = 0
+Model1 <- meta3(logOR, v, cluster=Cluster, data=Bornmann07, 
+                RE3.constraints=0, model.name="2 level")
+## Alternative approach
+## Model1 <- meta(logOR, v, data=Bornmann07, model.name="2 level")
+
+anova(Model0, Model1)
+
+
+###################################################
+### code chunk number 10: Bornmann3c
+###################################################
+## ## Model 2: Testing tau^2_2 = 0
+Model2 <- meta3(logOR, v, cluster=Cluster, data=Bornmann07, 
+                RE2.constraints=0, model.name="tau2_2 EQ 0")
+
+anova(Model0, Model2)
+
+
+###################################################
+### code chunk number 12: Bornmann4a
+###################################################
+## ## Model 3: Testing tau^2_2 = tau^2_3
+Model3 <- meta3(logOR, v, cluster=Cluster, data=Bornmann07, 
+                RE2.constraints="0.1*Eq_tau2", 
+                RE3.constraints="0.1*Eq_tau2", 
+                model.name="Eq tau2")
+
+
+###################################################
+### code chunk number 14: Bornmann4c 
+###################################################
+anova(Model0, Model3)
+
+
+###################################################
+### code chunk number 16: Bornmann5a
+###################################################
+## Show the first 10 cases of Type
+Bornmann07$Type[1:10]
+
+
+###################################################
+### code chunk number 17: Bornmann5b
+###################################################
+## Convert characters into a dummy variable
+## Type2=0 (Grant); Type2=1 (Fellowship)   
+Type2 <- ifelse(Bornmann07$Type=="Fellowship", yes=1, no=0)
+
+## Show the first 10 cases of Type2
+Type2[1:10]
+
+
+###################################################
+### code chunk number 18: Bornmann5c 
+###################################################
+## ## Model 4: Type2 as the covariate  
+summary( meta3(y=logOR, v=v, x=Type2, cluster=Cluster, 
+               data=Bornmann07) )
+
+
+###################################################
+### code chunk number 20: Bornmann6a 
+###################################################
+## ## Model 5: Year and Year^2 as covariates
+summary( Model5 <- meta3(y=logOR, v=v, 
+                         x=cbind(scale(Year), scale(Year)^2), 
+                         cluster=Cluster, data=Bornmann07,
+                         model.name="Model 5") )
+
+
+###################################################
+### code chunk number 22: Bornmann6c 
+###################################################
+## ## Testing H_0: beta_{Year} = beta_{Year^2}=0
+anova(Model5, Model0)
+
+
+###################################################
+### code chunk number 24: Bornmann7ab
+###################################################
+## Create indicators for countries
+USA <- ifelse(Bornmann07$Country=="United States", yes=1, no=0)
+Aus <- ifelse(Bornmann07$Country=="Australia", yes=1, no=0)
+Can <- ifelse(Bornmann07$Country=="Canada", yes=1, no=0)
+Eur <- ifelse(Bornmann07$Country=="Europe", yes=1, no=0)
+UK  <- ifelse(Bornmann07$Country=="United Kingdom", yes=1, no=0)
+
+
+###################################################
+### code chunk number 25: Bornmann7b 
+###################################################
+## ## Model 6: indicators for country as moderators
+summary( Model6 <- meta3(y=logOR, v=v, intercept.constraint=0,
+                         x=cbind(USA, Aus, Can, Eur, UK), 
+                         cluster=Cluster, data=Bornmann07,
+                         model.name="Model 6") )
+
+
+###################################################
+### code chunk number 27: Bornmann7d 
+###################################################
+## ## Testing H_0: all countries have the average effect sizes
+anova(Model6, Model0)
+```
+
+# Chapter 7: Meta-Analytic Structural Equation Modeling
+
+## A higher-order confirmatory factor analytic model for the Big Five model
+
+```{r}
+###################################################
+### code chunk number 3: Digman1
+###################################################
+## Display the first two correlation matrices
+Digman97$data[1:2]
+## Display the first two sample sizes
+Digman97$n[1:2]
+
+
+###################################################
+### code chunk number 4: Digman2 
+###################################################
+fixed1 <- tssem1(Digman97$data, Digman97$n, method="FEM")
+summary(fixed1)
+## Alternative approach if you do not want to save "fixed1"
+## summary( tssem1(Digman97$data, Digman97$n, method="FEM") )
+
+
+###################################################
+### code chunk number 6: Digman4
+###################################################
+coef(fixed1)
+
+
+###################################################
+### code chunk number 7: Digman5
+###################################################
+## Define the S matrix that includes both Phi and Psi
+## Phi matrix: 2x2 correlation matrix between the latent factors
+( Phi <- matrix(c(1,".3*cor",".3*cor",1), nrow=2, ncol=2) )
+## Psi matrix: 5x5 diagonal matrix of the error variances
+( Psi <- Diag(c(".2*e1",".2*e2",".2*e3",".2*e4",".2*e5")) )
+## Create a block diagonal matrix as the S matrix
+S1 <- bdiagMat(list(Psi, Phi))
+
+## This step is not necessary but useful 
+## for inspecting the model.
+dimnames(S1)[[1]] <- c("A","C","ES","E","I","f_Alpha","f_Beta") 
+dimnames(S1)[[2]] <- dimnames(S1)[[1]] 
+S1
+## Convert it into a MxMatrix class
+S1 <- as.mxMatrix(S1)
+
+## Lambda matrix: 5x2 factor loadings
+## Arrange the data by row
+( Lambda <- matrix(c(".3*Alpha_A", 0,
+                   ".3*Alpha_C", 0,
+                   ".3*Alpha_ES", 0,
+                   0, ".3*Beta_E",
+                   0, ".3*Beta_I"),
+                   nrow=5, ncol=2, byrow=TRUE) )
+
+## Create a 5x5 of zeros
+( Zero5x5 <- matrix(0, nrow=5, ncol=5) )
+## Create a 2x7 of zeros
+( Zero2x7 <- matrix(0, nrow=2, ncol=7) )
+## Define the A matrix
+A1 <- rbind(cbind(Zero5x5, Lambda),
+            Zero2x7)
+
+## This step is useful for inspecting the model.
+dimnames(A1)[[1]] <- c("A","C","ES","E","I","f_Alpha","f_Beta")
+dimnames(A1)[[2]] <- dimnames(A1)[[1]]  
+A1
+## Convert it into a MxMatrix class
+A1 <- as.mxMatrix(A1)
+
+## F matrix to select the observed variables
+## First 5 elements are observed variables
+## Last 2 elements are latent variables
+F1 <- create.Fmatrix(c(1,1,1,1,1,0,0), name="F1", 
+                     as.mxMatrix=FALSE)
+
+## This step is useful for inspecting the model.
+dimnames(F1)[[1]]  <- c("A","C","ES","E","I") 
+dimnames(F1)[[2]]  <- c("A","C","ES","E","I","f_Alpha","f_Beta") 
+F1
+## Convert it into a MxMatrix class
+F1 <- as.mxMatrix(F1)
+
+
+###################################################
+### code chunk number 8: Digman6
+###################################################
+fixed2 <- tssem2(fixed1, Amatrix=A1, Smatrix=S1, Fmatrix=F1, 
+                 diag.constraints=FALSE)
+summary(fixed2) 
+
+
+###################################################
+### code chunk number 10: Digman8
+###################################################
+## Display the original study characteristics
+Digman97$cluster
+## Convert 3 clusters into 2 clusters
+## Younger participants: "Children" and "Adolescents"
+## Older participants: "Mature adults"
+cluster <- ifelse(Digman97$cluster %in% c("Children","Adolescents"),
+                 yes="Younger participants", 
+                 no="Older participants")
+
+## Show the recoded sample
+cluster
+
+
+###################################################
+### code chunk number 11: Digman9 
+###################################################
+## Fixed-effects TSSEM with two clusters
+fixed1.cluster <- tssem1(Digman97$data, Digman97$n, method="FEM", 
+                         cluster=cluster)
+summary(fixed1.cluster)
+
+
+###################################################
+### code chunk number 13: Digman11 
+###################################################
+fixed2.cluster <- tssem2(fixed1, Amatrix=A1, Smatrix=S1, 
+                         Fmatrix=F1, diag.constraints=FALSE)
+summary(fixed2.cluster)
+
+
+###################################################
+### code chunk number 14: Digman12 (eval = FALSE)
+###################################################
+## ## Random-effects TSSEM
+## ## There were errors in the analysis.
+## random1 <- tssem1(Digman97$data, Digman97$n, method="REM")
+## summary(random1)
+
+
+###################################################
+### code chunk number 15: Digman13 
+###################################################
+## Random-effects TSSEM with random effects on the diagonals
+random1 <- tssem1(Digman97$data, Digman97$n, method="REM",
+                  RE.type="Diag")
+summary(random1)
+
+
+###################################################
+### code chunk number 17: Digman15
+###################################################
+## Extract the fixed-effects estimates
+(est_fixed <- coef(random1, select="fixed"))
+## Convert the estimated vector to a symmetrical matrix
+## where the digonals are fixed at 1 (for a correlation matrix)
+vec2symMat(est_fixed, diag=FALSE)
+
+
+###################################################
+### code chunk number 18: Digman16 
+###################################################
+random2 <- tssem2(random1, Amatrix=A1, Smatrix=S1, Fmatrix=F1, 
+                  diag.constraints=FALSE)
+summary(random2)
+```
+
+```{r, message=FALSE}
+## Load the library to plot the model
+library("semPlot")
+
+## Convert the model to semPlotModel object
+my.plot <- meta2semPlot(random2, latNames=c("Alpha","Beta"))
+
+## Plot the model with labels
+semPaths(my.plot, whatLabels="path", nCharEdges=10, nCharNodes=10, color="yellow")
+
+## Plot the parameter estimates
+semPaths(my.plot, whatLabels="est", nCharNodes=10, color="green")
+
+###################################################
+### code chunk number 20: Digman18
+###################################################
+## Alternative call: 
+## Smatrix <- diag(random2$mx.fit@algebras$Smatrix@result)
+## Sxtract and display the error variances
+(Smatrix <- diag(mxEval(Smatrix, random2$mx.fit)))
+## Calculate the R2 on the variables
+1 - Smatrix
+```
+
+## A regression model on SAT (Math)
+
+```{r}
+###################################################
+### code chunk number 21: Becker1
+###################################################
+## Display the first two correlation matrices
+Becker94$data[1:2]
+## Display the first two sample sizes
+Becker94$n[1:2]
+## Display the first two sample types
+Becker94$gender[1:2]
+
+
+###################################################
+### code chunk number 22: Becker2 
+###################################################
+fixed1 <- tssem1(Becker94$data, Becker94$n, method="FEM")
+summary(fixed1)
+
+
+###################################################
+### code chunk number 24: Becker4
+###################################################
+## Fixed-effects TSSEM with two clusters
+fixed.cluster <- tssem1(Becker94$data, Becker94$n, method="FEM", 
+                        cluster=Becker94$gender)
+summary(fixed.cluster)
+
+
+###################################################
+### code chunk number 26: Becker6 (eval = FALSE)
+###################################################
+## ## Random-effects TSSEM
+## ## The OpenMx status was 6.
+## random1 <- tssem1(Becker94$data, Becker94$n, method="REM")
+## summary(random1)
+
+
+###################################################
+### code chunk number 27: Becker7 
+###################################################
+## Random-effects TSSEM with random effects on the diagonals
+random1 <- tssem1(Becker94$data, Becker94$n, method="REM",
+                  RE.type="Diag")
+summary(random1)
+
+
+###################################################
+### code chunk number 29: Becker9
+###################################################
+vec2symMat( coef(random1, select="fixed"), diag=FALSE )
+
+
+###################################################
+### code chunk number 30: Becker9
+###################################################
+## Arrange the data by row
+A2 <- create.mxMatrix(c(0, "0.2*Spatial2Math", "0.2*Verbal2Math",
+                        0, 0, 0,
+                        0, 0, 0), 
+                      type="Full", nrow=3, ncol=3, 
+                      byrow=TRUE, name="A2")
+A2
+## Only the elements in the lower triangle are required
+S2 <- create.mxMatrix(c("0.2*ErrVarMath",
+                        0,1,
+                        0,"0.2*CorMathVerbal",1),
+                       type="Symm", byrow=TRUE, name="S2")
+S2
+
+
+###################################################
+### code chunk number 31: Becker10 
+###################################################
+random2 <- tssem2(random1, Amatrix=A2, Smatrix=S2,  
+                  diag.constraints=FALSE)
+summary(random2)
+```
+
+```{r, message=FALSE}
+## Load the library to plot the model
+library("semPlot")
+
+## Convert the model to semPlotModel object
+my.plot <- meta2semPlot(random2)
+
+## Plot the model with labels
+semPaths(my.plot, whatLabels="path", nCharEdges=10, nCharNodes=10, color="yellow")
+
+## Plot the parameter estimates
+semPaths(my.plot, whatLabels="est", nCharNodes=10, color="green")
+
+###################################################
+### code chunk number 33: Becker12
+###################################################
+## Display the content of the Smatrix
+mxEval(Smatrix, random2$mx.fit)
+## Error variance on SAT (Math)
+## Select the element [1,1] correspondent to SAT (Math)
+(Smatrix <- mxEval(Smatrix, random2$mx.fit)[1,1])
+## R2 on SAT (Math)
+1 - Smatrix
+```
+
+## A path model for cognitive ability to supervisor rating
+
+```{r}
+###################################################
+### code chunk number 35: Hunter1a
+###################################################
+## Display the correlation matrices
+Hunter83$data[1:2]
+## Display the sample sizes
+Hunter83$n[1:2]
+## Show the missing data: show.na=TRUE
+## Show the present data: show.na=FALSE
+pattern.na(Hunter83$data, show.na=FALSE)
+
+
+###################################################
+### code chunk number 36: Hunter1b
+###################################################
+## Display the accumulative sample sizes for each correlation
+pattern.n(Hunter83$data, Hunter83$n)
+
+
+###################################################
+### code chunk number 37: Hunter1c
+###################################################
+is.pd(Hunter83$data)
+
+
+###################################################
+### code chunk number 38: Hunter2 
+###################################################
+fixed1 <- tssem1(Hunter83$data, Hunter83$n, method="FEM")
+summary(fixed1)
+
+
+###################################################
+### code chunk number 40: Hunter4 
+###################################################
+random1 <- tssem1(Hunter83$data, Hunter83$n, method="REM", 
+                  RE.type="Diag")
+summary(random1)
+
+
+###################################################
+### code chunk number 42: Hunter6
+###################################################
+vec2symMat( coef(random1, select="fixed"), diag=FALSE)
+
+
+###################################################
+### code chunk number 43: Hunter7
+###################################################
+## Arrange the elements by row
+## Variables are arranged as: 
+## Ability, Job knowledge, Work sample and Supervisor rating
+(A3 <- create.mxMatrix(c(0, 0, 0, 0,
+                         "0.1*A2J", 0, 0, 0,
+                         "0.1*A2W", "0.1*J2W", 0, 0,
+                         0, "0.1*J2S", "0.1*W2S", 0),
+                        type="Full", nrow=4, ncol=4, byrow=TRUE))
+(S3 <- create.mxMatrix(c(1,"0.1*ErrVarJ", 
+                        "0.1*ErrVarW", "0.1*ErrVarS"), 
+                        type="Diag"))
+
+
+###################################################
+### code chunk number 44: Hunter8 
+###################################################
+random2 <- tssem2(random1, Amatrix=A3, Smatrix=S3, 
+                  intervals.type="LB", 
+                  diag.constraints=TRUE, mx.algebras=list(Ind=mxAlgebra(A2J*J2S+A2J*J2W*W2S+A2W*W2S, 
+                 name="Ind")))
+summary(random2)
+```
+
+```{r, message=FALSE}
+## Load the library
+library("semPlot")
+
+## Convert the model to semPlotModel object
+my.plot <- meta2semPlot(random2)
+
+## Plot the model with labels
+semPaths(my.plot, whatLabels="path", nCharEdges=10, nCharNodes=10, color="yellow")
+
+## Plot the parameter estimates
+semPaths(my.plot, whatLabels="est", nCharNodes=10, color="green")
+```
+
+# Chapter 8: Advanced Topics in SEM-Based Meta-Analysis
+
+## Restricted (or residual) maximum likelihood estimation
+
+```{r}
+###################################################
+### code chunk number 2: Jaramillo1 
+###################################################
+
+## Request LBCI: intervals.type="LB"
+summary( jaramillo1 <- reml(y=r, v=r_v, intervals.type="LB", 
+                            data=Jaramillo05) )
+
+
+###################################################
+### code chunk number 4: Jaramillo3 
+###################################################
+summary( meta(y=r, v=r_v, data=Jaramillo05,
+              RE.constraints=coef(jaramillo1)) )
+
+
+###################################################
+### code chunk number 6: wvs1 
+###################################################
+summary( wvs1 <- reml(y=cbind(lifesat, lifecon),
+                     v=cbind(lifesat_var, inter_cov, lifecon_var), 
+                     data=wvs94a, RE.lbound=NA) )
+
+
+###################################################
+### code chunk number 8: wvs3
+###################################################
+## Extract the variance component of the random effects
+( RE <- vec2symMat(coef(wvs1)) )
+
+
+###################################################
+### code chunk number 9: wvs4 
+###################################################
+summary( meta(y=cbind(lifesat, lifecon),
+              v=cbind(lifesat_var, inter_cov, lifecon_var),
+              RE.constraints=RE, data=wvs94a) )    
+
+
+###################################################
+### code chunk number 11: Bornmann1 
+###################################################
+Bornmann1 <- reml3(y=logOR, v=v, cluster=Cluster, data=Bornmann07)
+
+## The OpenMx status1 is 6. We rerun the model.
+summary( Bornmann2 <- rerun(Bornmann1) )
+
+
+###################################################
+### code chunk number 13: Bornmann3
+###################################################
+## Extract the level-2 and level-3 heterogeneity variances
+( RE <- coef(Bornmann2) )
+
+
+###################################################
+### code chunk number 14: Bornmann4 
+###################################################
+summary(meta3(y=logOR, v=v, cluster=Cluster, data=Bornmann07, 
+              RE2.constraints=RE[1], RE3.constraints=RE[2]))
+```
+
+## Missing values in the moderators
+
+```{r}
+###################################################
+### code chunk number 16: Jaramillo11
+###################################################
+
+## Set seed for replication
+set.seed(1000000)
+
+## Create a copy of data
+my.df1 <- Jaramillo05[, c("r", "r_v", "IDV")]
+
+## Create 20 missing values out of 61 studies with MCAR
+my.df1$IDV[sample(1:61, 20)] <- NA
+
+## Center the moderator
+my.df1$IDV <- scale(my.df1$IDV, scale=FALSE)
+
+my.df1$IDV
+
+
+###################################################
+### code chunk number 17: Jaramillo12
+###################################################
+## ## Run the analysis by using the listwise deletion (the default)
+summary( meta(y=r, v=r_v, x=IDV, data=my.df1) )
+
+
+###################################################
+### code chunk number 19: Jaramillo14
+###################################################
+## Create an A matrix for the asymmetric paths
+A1 <- matrix(c(0,0,1,0,
+               0,0,0,1,
+               0,0,0,"0*Slope1_1",
+               0,0,0,0), byrow=TRUE, ncol=4)
+
+dimnames(A1) <- list(c("r","IDV","f","eta"), 
+                     c("r","IDV","f", "eta"))
+A1
+
+
+###################################################
+### code chunk number 20: Jaramillo15
+###################################################
+## Convert the A matrix into mxMatrix class
+A1 <- as.mxMatrix(A1)
+
+## Create an S matrix for the covariance matrix among variables
+S1 <- mxMatrix("Symm", nrow=4, ncol=4, values=0, byrow=TRUE,
+               free=c(FALSE,
+                      FALSE, FALSE,
+                      FALSE, FALSE, TRUE,
+                      FALSE, FALSE, FALSE, TRUE),
+               labels=c("data.r_v",
+                      NA, NA,
+                      NA, NA, "Tau2_1_1",
+                      NA, NA, NA, "VarIDV"),
+               name="S1")
+S1@labels
+
+
+###################################################
+### code chunk number 21: Jaramillo16
+###################################################
+## Create an M matrix for the means
+M1 <- matrix(c(0,0,"0*Intercept1","300*MeanIDV"), nrow=1)
+dimnames(M1)[[2]] <- c("r","IDV","f","eta")
+M1
+
+
+###################################################
+### code chunk number 22: Jaramillo17
+###################################################
+M1 <- as.mxMatrix(M1)
+
+## Create an F matrix to selecting the observed variables
+F1 <- create.Fmatrix(c(1,1,0,0), name="F", as.mxMatrix=FALSE)
+dimnames(F1) <- list(c("r","IDV"), c("r","IDV","f","eta"))
+F1
+
+
+###################################################
+### code chunk number 23: Jaramillo18
+###################################################
+F1 <- as.mxMatrix(F1)
+
+## Create an mx model
+uni.MCAR <- mxModel("MCAR",                      
+                    mxData(my.df1, type="raw"),
+                    A1, S1, F1, M1,
+                    mxExpectationRAM("A1","S1","F1","M1", 
+                                  dimnames=c("r","IDV","f","eta")),
+                    mxFitFunctionML())
+
+
+###################################################
+### code chunk number 24: Jaramillo19 
+###################################################
+## Run the analysis
+summary(mxRun(uni.MCAR))
+
+
+###################################################
+### code chunk number 26: wvs11
+###################################################
+## Create a copy of the original data by excluding the country
+my.df2 <- wvs94a[, -1]
+
+## Center the predictor
+my.df2$gnp <- scale(my.df2$gnp/10000, scale=FALSE)
+
+## Create the matrix for regression coefficients
+A2 <- matrix(c(0,0,0,1,0,0,
+               0,0,0,0,1,0,
+               0,0,0,0,0,1,
+               0,0,0,0,0,"0*Slope1_1",
+               0,0,0,0,0,"0*Slope2_1",
+               0,0,0,0,0,0), byrow=TRUE, ncol=6)
+dimnames(A2) <- list(c("lifesat","lifecon","gnp","f1","f2","eta"), 
+                     c("lifesat","lifecon","gnp","f1","f2","eta"))
+
+## Display the content of A2
+A2
+
+
+###################################################
+### code chunk number 27: wvs12
+###################################################
+## Convert A2 into mxMatrix class
+A2 <- as.mxMatrix(A2)
+
+## Symmetric matrix for the variables
+S2 <- mxMatrix("Symm", nrow=6, ncol=6, byrow=TRUE, values=0,
+               free=c(FALSE,
+                      FALSE,FALSE,
+                      FALSE,FALSE,FALSE,
+                      FALSE,FALSE,FALSE,TRUE,
+                      FALSE,FALSE,FALSE,TRUE,TRUE,
+                      FALSE,FALSE,FALSE,FALSE,FALSE,TRUE),
+               labels=c("data.lifesat_var",
+                        "data.inter_cov","data.lifecon_var",
+                        NA,NA,NA,
+                        NA,NA,NA,"Tau2_1_1",
+                        NA,NA,NA,"Tau2_2_1","Tau2_2_2",
+                        NA,NA,NA,NA,NA,"VarGNP"), 
+               name="S2")
+S2@labels
+
+
+###################################################
+### code chunk number 28: wvs13
+###################################################
+## Create the vector for means
+M2 <- matrix(c(0,0,0,"0*Intercept1","0*Intercept2","0*MeanGNP"),
+             nrow=1)
+dimnames(M2)[[2]] <- c("lifesat","lifecon","gnp","f1","f2","eta")
+M2
+
+
+###################################################
+### code chunk number 29: wvs14
+###################################################
+M2 <- as.mxMatrix(M2)
+
+## Create a selection matrix
+F2 <- create.Fmatrix(c(1,1,1,0,0,0), name="F2", as.mxMatrix=FALSE)
+dimnames(F2) <- list(c("lifesat","lifecon","gnp"), 
+                     c("lifesat","lifecon","gnp","f1","f2","eta"))
+F2
+
+
+###################################################
+### code chunk number 30: wvs15
+###################################################
+F2 <- as.mxMatrix(F2)
+
+## Create a model
+multi.MCAR <- mxModel("MCAR",                      
+                      mxData(my.df2, type="raw"),
+                      A2, S2, F2, M2,
+                      mxExpectationRAM("A2","S2","F2","M2", 
+                      dimnames=c("lifesat","lifecon","gnp",
+                                 "f1","f2","eta")),
+                      mxFitFunctionML())
+
+
+###################################################
+### code chunk number 31: wvs16 
+###################################################
+summary(mxRun(multi.MCAR))
+
+
+###################################################
+### code chunk number 33: Bornmann11
+###################################################
+## Set seed for replication
+set.seed(1000000)
+
+## Create a copy of Type
+## "Fellowship": 1; "Grant": 0
+Type_MCAR <- ifelse(Bornmann07$Type=="Fellowship", yes=1, no=0)
+
+## Create 17 missing values out of 66 studies with MCAR
+Type_MCAR[sample(1:66, 17)] <- NA
+## Display the content
+Type_MCAR
+
+
+###################################################
+### code chunk number 34: Bornmann12 
+###################################################
+summary( meta3(y=logOR, v=v, cluster=Cluster, x=Type_MCAR, 
+               data=Bornmann07) )
+
+
+###################################################
+### code chunk number 36: Bornmann14 
+###################################################
+summary( meta3X(y=logOR, v=v, cluster=Cluster, x2=Type_MCAR, 
+                data=Bornmann07) )
+```
+
+# Chapter 9: Conducting Meta-Analysis with Mplus
+```{r, echo=FALSE}
+mplus <- function(x, msg="my message") {  
+ ## Mplus inp file
+ my.inp <- paste("./Mplus/", x,".inp", sep="")
+ txt.inp <- readLines(my.inp, warn = FALSE)
+ ## Mplus output file
+ my.out <- paste("./Mplus/", x,".out", sep="")
+ txt.out <- readLines(my.out, warn = FALSE)
+ 
+ cat("[",msg,"](", my.inp, ")\n", sep="")
+ 
+ cat("```\n")
+ cat(txt.inp, sep="\n", append=TRUE)
+ cat("```\n")
+ 
+ cat("[Mplus output file](", my.out, ")\n", sep="")
+ 
+ cat("```\n")
+ cat(txt.out, sep="\n", append=TRUE)
+ cat("```\n")  
+}
+```
+
+## Data sets used in Mplus
+* [Bornmann07](./Mplus/Bornmann07.dat)
+* [Jaramillo05](./Mplus/Jaramillo05.dat)
+* [wvs94a](./Mplus/wvs94a.dat)
+
+## Univariate meta-analysis
+```{r, echo=FALSE, results='asis'}
+mplus("uni_fixed", "Univariate fixed-effects meta-analysis")
+mplus("uni_rand1", "Univariate random-effects meta-analysis (single level approach)")
+mplus("uni_rand2", "Univariate random-effects meta-analysis (two-level approach)")
+mplus("uni_indices", "Calculations of Q statistic and I2")
+mplus("uni_mixed1", "Univariate mixed-effects meta-analysis with two predictors")
+mplus("uni_mixed2", "Univariate mixed-effects meta-analysis with equal regression coefficients on two predictors")
+mplus("uni_miss", "Univariate mixed-effects meta-analysis with FIML estimation on missing values in predictors")
+```
+
+## Multivariate meta-analysis
+Data preparation:
+```{r}
+###################################################
+### code chunk number 2: wvs94a2mplus 
+###################################################
+## Select the effect sizes
+y <- wvs94a[, c("lifesat","lifecon")]
+
+## Convert it into a column of effect sizes
+y <- matrix(t(y), ncol=1)
+
+## Prepare the design matrix
+X <- matrix(rep(c(1,0,0,1), nrow(wvs94a)), ncol=2, byrow=TRUE)
+
+## Convert the known sampling covariance matrix into 
+## a block diagonal matrix
+V <- matrix2bdiag(wvs94a[, c("lifesat_var","inter_cov",
+                             "lifecon_var")])
+
+## Calculate the transformation matrix
+W0.5 <- chol(solve(V))
+
+## Calculate the transformed effect size
+y_new <- W0.5 %*% y
+
+## Calculate the transformed design matrix
+X_new <- W0.5 %*% X
+
+## Center gnp and divide it by 10000 to improve numerical stability
+## Prepare the gnp
+gnp <- scale(wvs94a$gnp/10000, scale=FALSE)
+
+## Convert y into one row per study
+y2 <- matrix(c(t(y_new)), ncol=2, byrow=TRUE)
+
+## Convert X into one row per study
+x2 <- matrix(c(t(X_new)), ncol=4, byrow=TRUE)
+
+my.wide <- cbind(y2, x2, gnp)
+
+## Add the variable names for ease of reference
+## W0.5 = [y1f1, y1f2]
+##        [0   , y2f2]
+colnames(my.wide) <- c("y1", "y2", "y1f1", "y1f2", "y2f1", "y2f2", "gnp")
+
+## Display the first few cases
+head(my.wide)
+
+## Write it as a plain text for Mplus
+## y2f1 is excluded in my.wide since it contains only 0.
+## Missing values are represented by *
+write.table(my.wide[,-5], "wvs94a.dat", sep=" ", na="*", row.names=FALSE, 
+            col.names=FALSE)
+```
+
+```{r, echo=FALSE, results='asis'}
+mplus("mul_fixed", "Multivariate fixed-effects meta-analysis")
+mplus("mul_rand1", "Multivariate random-effects meta-analysis")
+mplus("mul_rand2", "Multivariate random-effects meta-analysis with both population means fixed at 0")
+mplus("mul_mixed", "Multivariate mixed-effects meta-analysis")
+mplus("mul_med", "Mediation model on the \"true\" effect sizes")
+mplus("mul_mod", "Moderation model on the \"true\" effect sizes")
+```
+
+## Three-level meta-analysis
+Data preparation:
+```{r}
+###################################################
+### code chunk number 4: Bornmann2mplus1
+###################################################
+
+## Select the relevant variables to export
+my.df <- Bornmann07[, c(3,1,4:6)]
+## Standardize "year"
+my.df$Year <- scale(my.df$Year)
+Fellow <- ifelse(Bornmann07$Type=="Fellowship", yes=1, no=0)
+
+D_Phy <- ifelse(Bornmann07$Discipline=="Physical sciences", 
+                yes=1, no=0)
+D_Life <- ifelse(Bornmann07$Discipline=="Life sciences/biology", 
+                 yes=1, no=0)
+D_Soc<- ifelse(Bornmann07$Discipline=="Social sciences/humanities", 
+               yes=1, no=0)
+D_Mul <- ifelse(Bornmann07$Discipline=="Multidisciplinary", 
+                yes=1, no=0)
+
+C_USA <- ifelse(Bornmann07$Country=="United States", yes=1, no=0)
+C_Aus <- ifelse(Bornmann07$Country=="Australia", yes=1, no=0)
+C_Can <- ifelse(Bornmann07$Country=="Canada", yes=1, no=0)
+C_Eur <- ifelse(Bornmann07$Country=="Europe", yes=1, no=0)
+C_UK <- ifelse(Bornmann07$Country=="United Kingdom", yes=1, no=0)
+
+my.df <- cbind(my.df, Fellow, D_Phy, D_Life, D_Soc, D_Mul, 
+               C_USA, C_Aus, C_Can, C_Eur, C_UK)
+
+## Show a few cases
+head(my.df)
+
+## ## Write to an external file
+## write.table(my.df, "Bornmann07.dat", row.names=FALSE, 
+##              col.names=FALSE, na="NA", sep="\t")
+```
+
+```{r, echo=FALSE, results='asis'}
+mplus("3l_rand1", "Three-level random-effects meta-analysis")
+mplus("3l_rand2", "Three-level random-effects meta-analysis with equality on level-2 and level-3 heterogeneity variances")
+mplus("3l_mixed", "Three-level mixed-effects meta-analysis")
+```
+
+# Appendix: An Introduction to R, OpenMx, and metaSEM Packages
+
+```{r}
+###################################################
+### code chunk number 2: R1
+###################################################
+## Assign 10 to x
+x <- 10
+
+## Display the content of x
+x
+
+## Multiply 5 to x, store it as X,
+## and display the content of X using ()
+( X <- 5*x )
+
+## x and X are different in R
+x
+
+
+###################################################
+### code chunk number 3: R2
+###################################################
+## x is a vector of data
+## c() is used to combine the data
+( x <- c(5, 6, 9, 10) )
+
+## Square the data in x
+(x^2)
+
+## Create another vector of data
+( y <- c(5, 9, 8, 11) )
+
+## Multiply the elements one by one
+( x*y )
+
+
+###################################################
+### code chunk number 4: R3
+###################################################
+## Create a data frame called my.df1
+( my.df1 <- data.frame(y=y, x=x) )
+
+## Get the summary of the data
+summary(my.df1)
+
+## Calculate the covariance matrix of the variables
+cov(my.df1)
+
+## Calculate the means of the variables
+## apply(): apply the function either by rows or by columns
+## MARGIN: "1" for by rows and "2" for by columns
+## FUN: name of the function
+apply(my.df1, MARGIN=2, FUN=mean)
+
+
+###################################################
+### code chunk number 5: R4
+###################################################
+## Conduct a simple regression by regressing y on x
+my.lm <- lm(y~x, data=my.df1)
+
+## Get the summary
+summary(my.lm)
+
+## Get the regression coefficient
+coef(my.lm)
+
+
+###################################################
+### code chunk number 6: R5
+###################################################
+## Figure A.1
+## Plot the data on y against x
+plot(y~x, data=my.df1)
+
+## Draw the best fitted line using the my.lm object
+abline(my.lm)
+
+
+###################################################
+### code chunk number 8: R7
+###################################################
+## Prepare a dataset
+## Study ID in the meta-analysis
+Study <- c("Author (2012)", "Author (2014)")
+## Means of the treatment group
+m1i <- c(12, 14)
+## SDs of the treatment group
+sd1i <- c(4, 5)
+## Sample sizes of the treatment group
+n1i <- c(40, 50)
+## Means of the control group
+m2i <- c(10, 11)
+## SDs of the control group
+sd2i <- c(4, 5)
+## Sample sizes of the control groups
+n2i <- c(40, 50)
+
+## Create a data frame
+( my.df2 <- data.frame(Study=Study, m1i=m1i, sd1i=sd1i, n1i=n1i, 
+                       m2i=m2i, sd2i=sd2i, n2i=n2i) )
+
+## Calculate the SMD
+escalc(measure="SMD", m1i=m1i, sd1i=sd1i, n1i=n1i, 
+       m2i=m2i, sd2i=sd2i, n2i=n2i, data=my.df2)
+
+
+###################################################
+### code chunk number 9: R8 (eval = FALSE)
+###################################################
+## ## Read the help manual on the log() function
+## help(log) 
+## ?log
+## 
+## ## Run the examples in the manual
+## example(log)
+## 
+## ## Search the relevant functions with log()
+## help.search("log")
+## 
+## ## Start the html browser
+## help.start()
+
+
+###################################################
+### code chunk number 10: Mx1
+###################################################
+## Sample covariance matrix
+( my.cov <- matrix(c(4.5, 2.0, 2.0, 3.6), nrow=2, ncol=2,
+                dimnames=list(c("x","y"), c("x","y"))) )
+
+## Sample means of the variables
+my.means <- c(5, 7)
+## Add the names for the means
+names(my.means) <- c("x", "y")
+my.means
+        
+## Prepare the matrices in the RAM formulation
+## A matrix: asymmetric matrix representing regression coefficients 
+##  and factor loadings
+## type: type of the matrix; "Full": full matrix                 
+## free: whether the parameters are free or fixed
+## values: starting values for free parameters and fixed values 
+##  for fixed parameters
+## labels: labels of the parameters; they are constrained equally 
+##  if the labels are the same
+## byrow: whether the data are arranged by row (or by column)
+## name: name of the matrix
+A1 <- mxMatrix(type="Full", nrow=2, ncol=2,
+               free=c(FALSE, FALSE,
+                      TRUE, FALSE),
+               values=0,
+               labels=c(NA, NA,
+                        "beta1", NA),
+               byrow=TRUE,
+               name="A1")
+
+## S matrix: symmetric matrix representing variance covariance of 
+##  the variables
+## type: "Symm" means symmetric matrix                
+S1 <- mxMatrix(type="Symm", nrow=2, ncol=2, 
+               values=c(1, 0,
+                        0, 1),
+               free=c(TRUE, FALSE,
+                      FALSE, TRUE),
+               labels=c("VarX", NA,
+                        NA, "ErrorVarY"),
+               byrow=TRUE,
+               name="S1")
+              
+## M matrix: mean vector of the variables
+M1 <- mxMatrix(type="Full", nrow=1, ncol=2,
+               free=c(TRUE, TRUE),
+               values=c(0, 0),
+               labels=c("meanx", "beta0"),
+               name="M1")
+               
+## F matrix: a selection matrix to select the observed variables          
+## type: "Iden" means identity matrix                
+F1 <- mxMatrix(type="Iden", nrow=2, ncol=2, name="F1")
+
+## Create a model
+## The sample size is 100.
+reg.model <- mxModel("Simple Regression",
+                     mxData(observed=my.cov, 
+                            type="cov", 
+                            numObs=100,
+                            means=my.means),
+                     A1, S1, M1, F1,
+                     mxExpectationRAM(A="A1", S="S1", 
+                                    F="F1", M="M1",                               
+                     dimnames = c("x","y")),
+                     mxFitFunctionML())
+
+## Run the analysis                      
+reg.fit <- mxRun(reg.model, silent=TRUE)
+
+
+###################################################
+### code chunk number 11: Mx2 
+###################################################
+## Display the results
+summary(reg.fit)
+
+
+###################################################
+### code chunk number 13: MA1 (eval = FALSE)
+###################################################
+## ## Load the library
+## library("metaSEM")
+## 
+## ## Display the current directory
+## getwd()
+## 
+## ## Set the working directory to /mydirectory/R/data/ 
+## ##  in Unix-like systems
+## # setwd("/mydirectory/R/data/")
+## ## Set the working directory to D:\mydirectory\R\data 
+## ##  in Windows-like systems
+## # setwd("D:\\mydirectory\\R\\data")
+## # setwd("/D/mydirectory/R/data")
+## 
+## ## Read the data in CSV format
+## ( my.df3 <- read.csv("Becker83.csv") )
+```
+
+```{r, message=FALSE}
+###################################################
+### code chunk number 14: MA2
+###################################################
+library("metaSEM")
+
+my.df3 <- read.csv("Becker83.csv")
+my.df3
+
+
+###################################################
+### code chunk number 15: MA3 
+###################################################
+## Mixed-effects meta-analysis with log(items) as the predictor
+summary( meta(y=di, v=vi, x=log(items), data=my.df3) )
+
+
+###################################################
+### code chunk number 17: MA5 
+###################################################
+## Read lower triangle matrices
+## no.var: no. of variables for the lower triangle matrices
+my.df4 <- readLowTriMat("Hunter83.txt", no.var=4)
+
+## Add the variable names to improve readability
+my.df4 <- lapply(my.df4, function(x) 
+                 {dimnames(x) <- list(c("A","K","W","S"), 
+                                      c("A","K","W","S"))
+                  x})
+
+## Sample sizes for the studies                  
+my.n4 <- c(443,186,292,233,368,360,380,366,456,78,384,59,160,210)
+
+#### Random-effects model with diagonal elements only
+## First stage analysis
+random1 <- tssem1(my.df4, my.n4, method="REM", RE.type="Diag")
+## rerun to remove error code
+## random1 <- rerun(random1)
+summary(random1)
+
+A2 <- create.mxMatrix(c(0, 0, 0, 0,
+                       "0.1*A2J", 0, 0, 0,
+                       "0.1*A2W", "0.1*J2W", 0, 0,
+                       0, "0.1*J2S", "0.1*W2S", 0),
+                       type="Full", nrow=4, ncol=4, byrow=TRUE)
+S2 <- create.mxMatrix(c(1,"0.1*Var_J", 
+                       "0.1*Var_W", "0.1*Var_S"), 
+                       type="Diag")
+
+## Second stage analysis
+## Model without direct effect from Ability to Supervisor
+## diag.constraints=TRUE is required as there are mediators 
+summary( tssem2(random1, Amatrix=A2, Smatrix=S2, 
+                intervals.type="LB", diag.constraints=TRUE) )
+```
+
+The above results were based on the following versions of packages. 
+```{r, message=FALSE}
+sessionInfo()
+```

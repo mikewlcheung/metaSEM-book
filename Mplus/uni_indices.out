@@ -1,0 +1,241 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE: Calculate the Q statistic and the heterogeneity indices
+  DATA:   FILE IS Jaramillo05.dat;	
+  VARIABLE: NAMES id r r_v IDV OC_alpha JP_alpha;
+          USEVARIABLES ARE r w2;
+          MISSING ARE *;
+
+  DEFINE: w2 = SQRT(r_v**(-1));   ! Weight for transformation
+          r = w2*r;               ! Transformed r
+
+  ANALYSIS: ESTIMATOR=ML;         ! Use ML estimation
+
+  Model:		
+          r ON w2;
+          [r@0.0];	            ! Intercept fixed at 0
+          r (var);                ! Estimated error variance
+
+  MODEL CONSTRAINT:
+          NEW(Q I2);              ! Define functions of parameters
+                                  ! There are 61 studies.
+          Q = 61*var;             ! Q statistic
+          I2 = 1-60/Q;            ! I2 index
+  OUTPUT: SAMPSTAT;
+          CINTERVAL(symmetric); 	! Wald CI
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+Calculate the Q statistic and the heterogeneity indices
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          61
+
+Number of dependent variables                                    1
+Number of independent variables                                  1
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   R
+
+Observed independent variables
+   W2
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+
+Input data file(s)
+  Jaramillo05.dat
+
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              R             W2
+              ________      ________
+ R              1.000
+ W2             1.000         1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              R             W2
+              ________      ________
+      1         2.833        15.065
+
+
+           Covariances
+              R             W2
+              ________      ________
+ R              7.322
+ W2             7.809        33.574
+
+
+           Correlations
+              R             W2
+              ________      ________
+ R              1.000
+ W2             0.498         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -332.306
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     R                     2.833       1.989      -1.114    1.64%       0.629      1.854      2.321
+              61.000       7.322       6.934      15.860    1.64%       2.803      4.590
+     W2                   15.065       1.050       6.505    1.64%      10.193     13.107     13.915
+              61.000      33.574       1.295      35.244    1.64%      15.454     19.254
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        2
+
+Loglikelihood
+
+          H0 Value                        -138.902
+          H1 Value                        -138.581
+
+Information Criteria
+
+          Akaike (AIC)                     281.803
+          Bayesian (BIC)                   286.025
+          Sample-Size Adjusted BIC         279.733
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                              0.641
+          Degrees of Freedom                     1
+          P-Value                           0.4235
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.000
+          90 Percent C.I.                    0.000  0.312
+          Probability RMSEA <= .05           0.458
+
+CFI/TLI
+
+          CFI                                1.000
+          TLI                                1.022
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                             17.393
+          Degrees of Freedom                     1
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value                              0.053
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ R        ON
+    W2                 0.194      0.019     10.356      0.000
+
+ Intercepts
+    R                  0.000      0.000    999.000    999.000
+
+ Residual Variances
+    R                  5.564      1.007      5.523      0.000
+
+New/Additional Parameters
+    Q                339.389     61.454      5.523      0.000
+    I2                 0.823      0.032     25.716      0.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.347E-04
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ R        ON
+    W2               0.146       0.157       0.163       0.194       0.225       0.230       0.242
+
+ Intercepts
+    R                0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Residual Variances
+    R                2.969       3.589       3.907       5.564       7.221       7.538       8.159
+
+New/Additional Parameters
+    Q              181.096     218.940     238.297     339.389     440.480     459.838     497.681
+    I2               0.741       0.760       0.771       0.823       0.876       0.886       0.906
+
+
+     Beginning Time:  17:11:40
+        Ending Time:  17:11:40
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

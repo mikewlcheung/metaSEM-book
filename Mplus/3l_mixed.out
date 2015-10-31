@@ -1,0 +1,682 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:	Mixed-effects model: Fellow as the predictor
+  DATA:	FILE IS Bornmann07.dat;	
+  VARIABLE: NAMES Cluster ID y v Year Fellow D_Phy D_Life D_Soc D_Mul
+            C_USA C_Aus C_Can C_Eur C_UK;
+
+  USEVARIABLES y Fellow w2;
+          cluster = Cluster ID;      ! Level 2: ID; Level 3: Cluster
+          within = y w2;             ! Define within level variables
+          BETWEEN = (ID) Fellow;     ! Fellow is a level-2 variable
+
+  DEFINE: w2 = SQRT(v**(-1));
+          y = w2*y;
+                                     ! Use three-level modeling
+  ANALYSIS: TYPE=THREELEVEL RANDOM;  ! Activate random slope function
+          ESTIMATOR = ML;
+
+  MODEL:	%WITHIN%
+          [y@0.0];
+          y@1.0;
+          f | y ON w2;               ! Define random slope
+
+          %BETWEEN ID%               ! Level 2 variable
+          f ON Fellow;
+
+          !%BETWEEN Cluster%         ! Level 3 variance
+          !f*;
+
+  OUTPUT: SAMPSTAT;
+          TECH1 TECH8;
+
+
+
+*** WARNING in MODEL command
+  Variable on the left-hand side of an ON statement in a | statement is a
+  WITHIN variable.  The intercept for this variable is not random.
+  Variable:  Y
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+Mixed-effects model: Fellow as the predictor
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          66
+
+Number of dependent variables                                    1
+Number of independent variables                                  2
+Number of continuous latent variables                            1
+
+Observed dependent variables
+
+  Continuous
+   Y
+
+Observed independent variables
+   FELLOW      W2
+
+Continuous latent variables
+   F
+
+Variables with special functions
+
+  Cluster variables     CLUSTER   ID
+
+  Within variables
+   Y           W2
+
+  Level 2 between variables
+   FELLOW
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-02
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  Bornmann07.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of ID clusters                 66
+     Number of CLUSTER clusters            21
+
+     Average cluster size for ID level        1.000
+
+     Estimated Intraclass Correlations for the Y Variables for ID level
+
+                Intraclass
+     Variable  Correlation
+
+
+     Average cluster size for CLUSTER level        3.143
+
+     Estimated Intraclass Correlations for the Y Variables for CLUSTER level
+
+                Intraclass
+     Variable  Correlation
+
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1             -0.356         0.000         8.621
+
+
+           Covariances
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              3.307
+ FELLOW         0.000         0.000
+ W2             6.777         0.000        95.682
+
+
+           Correlations
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              1.000
+ FELLOW         0.000         0.000
+ W2             0.381         0.000         1.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN ID
+
+
+           Means
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1              0.000         0.394         0.000
+
+
+           Covariances
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.239
+ W2             0.000         0.000         0.000
+
+
+           Correlations
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         1.000
+ W2             0.000         0.000         0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN CLUSTER
+
+
+           Means
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1              0.000         0.000         0.000
+
+
+           Covariances
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.000
+ W2             0.000         0.000         0.000
+
+
+           Correlations
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.000
+ W2             0.000         0.000         0.000
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y                    -0.356       0.400      -5.263    1.52%      -1.463     -0.843     -0.666
+              66.000       3.307       1.603       5.807    1.52%      -0.308      0.754
+     FELLOW                0.394       0.434       0.000   60.61%       0.000      0.000      0.000
+              66.000       0.239      -1.812       1.000   39.39%       0.000      1.000
+     W2                    8.621       1.713       0.951    1.52%       1.725      2.783      4.718
+              66.000      95.682       1.712      35.436    1.52%       6.515     13.089
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        4
+
+Loglikelihood
+
+          H0 Value                        -115.381
+
+Information Criteria
+
+          Akaike (AIC)                     238.763
+          Bayesian (BIC)                   247.521
+          Sample-Size Adjusted BIC         234.928
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ Intercepts
+    Y                  0.000      0.000    999.000    999.000
+
+ Residual Variances
+    Y                  1.000      0.000    999.000    999.000
+
+Between ID Level
+
+ F          ON
+    FELLOW            -0.196      0.054     -3.611      0.000
+
+ Residual Variances
+    F                  0.004      0.002      1.454      0.146
+
+Between CLUSTER Level
+
+ Means
+    F                 -0.007      0.037     -0.178      0.859
+
+ Variances
+    F                  0.003      0.003      0.933      0.351
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.275E-02
+       (ratio of smallest to largest eigenvalue)
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1                  0             0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y                  0
+ FELLOW             0             0
+ W2                 0             0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1                  0             0             0             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               0             0             0             0             0
+ F%B3               0             0             0             0             0
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               0
+ F%B3               0             0
+ Y                  0             0             0
+ FELLOW             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN ID
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1                  0             0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y                  0
+ FELLOW             0             0
+ W2                 0             0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1                  0             0             0             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               0             0             0             1             0
+ F%B3               0             0             0             0             0
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               2
+ F%B3               0             0
+ Y                  0             0             0
+ FELLOW             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN CLUSTER
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1                  0             0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y                  0
+ FELLOW             0             0
+ W2                 0             0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1                  0             3             0             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               0             0             0             0             0
+ F%B3               0             0             0             0             0
+ Y                  0             0             0             0             0
+ FELLOW             0             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2               0
+ F%B3               0             4
+ Y                  0             0             0
+ FELLOW             0             0             0             0
+ W2                 0             0             0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1              0.000         0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.000
+ W2             0.000         0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           0.000
+ F%B3           0.000         0.000
+ Y              0.000         0.000         1.000
+ FELLOW         0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000        47.841
+
+
+     STARTING VALUES FOR BETWEEN ID
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1              0.000         0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.000
+ W2             0.000         0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           1.000
+ F%B3           0.000         0.000
+ Y              0.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         0.119
+ W2             0.000         0.000         0.000         0.000         0.000
+
+
+     STARTING VALUES FOR BETWEEN CLUSTER
+
+
+           NU
+              Y             FELLOW        W2
+              ________      ________      ________
+ 1              0.000         0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             FELLOW        W2
+              ________      ________      ________
+ Y              0.000
+ FELLOW         0.000         0.000
+ W2             0.000         0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             FELLOW        W2
+              ________      ________      ________      ________      ________
+ F%B2           0.000
+ F%B3           0.000         1.000
+ Y              0.000         0.000         0.000
+ FELLOW         0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000         0.000
+
+
+TECHNICAL 8 OUTPUT
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.18834241D+03    0.0000000    0.0000000  EM
+              2 -0.16507998D+03   23.2624279    0.1235114  EM
+              3 -0.15064172D+03   14.4382620    0.0874622  EM
+              4 -0.14123026D+03    9.4114525    0.0624757  EM
+              5 -0.13479351D+03    6.4367580    0.0455763  EM
+              6 -0.13025787D+03    4.5356353    0.0336488  EM
+              7 -0.12699501D+03    3.2628605    0.0250492  EM
+              8 -0.12460389D+03    2.3911170    0.0188284  EM
+              9 -0.12281914D+03    1.7847481    0.0143234  EM
+             10 -0.12146272D+03    1.3564276    0.0110441  EM
+             11 -0.12041397D+03    1.0487512    0.0086343  EM
+             12 -0.11959016D+03    0.8238031    0.0068414  EM
+             13 -0.11893374D+03    0.6564193    0.0054889  EM
+             14 -0.11840399D+03    0.5297535    0.0044542  EM
+             15 -0.11797160D+03    0.4323877    0.0036518  EM
+             16 -0.11761514D+03    0.3564670    0.0030216  EM
+             17 -0.11731864D+03    0.2964996    0.0025209  EM
+             18 -0.11707005D+03    0.2485812    0.0021189  EM
+             19 -0.11686016D+03    0.2098910    0.0017929  EM
+             20 -0.11668180D+03    0.1783591    0.0015263  EM
+             21 -0.11652936D+03    0.1524445    0.0013065  EM
+             22 -0.11639838D+03    0.1309842    0.0011240  EM
+             23 -0.11628529D+03    0.1130900    0.0009716  EM
+             24 -0.11618721D+03    0.0980756    0.0008434  EM
+             25 -0.11610180D+03    0.0854051    0.0007351  EM
+             26 -0.11602715D+03    0.0746562    0.0006430  EM
+             27 -0.11596166D+03    0.0654931    0.0005645  EM
+             28 -0.11590401D+03    0.0576467    0.0004971  EM
+             29 -0.11585311D+03    0.0508997    0.0004392  EM
+             30 -0.11580803D+03    0.0450753    0.0003891  EM
+             31 -0.11576800D+03    0.0400290    0.0003456  EM
+             32 -0.11573236D+03    0.0356416    0.0003079  EM
+             33 -0.11570055D+03    0.0318148    0.0002749  EM
+             34 -0.11567208D+03    0.0284665    0.0002460  EM
+             35 -0.11564655D+03    0.0255284    0.0002207  EM
+             36 -0.11562361D+03    0.0229429    0.0001984  EM
+             37 -0.11560295D+03    0.0206617    0.0001787  EM
+             38 -0.11558431D+03    0.0186438    0.0001613  EM
+             39 -0.11556745D+03    0.0168543    0.0001458  EM
+             40 -0.11555219D+03    0.0152637    0.0001321  EM
+             41 -0.11553834D+03    0.0138467    0.0001198  EM
+             42 -0.11552576D+03    0.0125815    0.0001089  EM
+             43 -0.11551431D+03    0.0114494    0.0000991  EM
+             44 -0.11550388D+03    0.0104345    0.0000903  EM
+             45 -0.11549435D+03    0.0095228    0.0000824  EM
+             46 -0.11548565D+03    0.0087022    0.0000753  EM
+             47 -0.11547769D+03    0.0079623    0.0000689  EM
+             48 -0.11547039D+03    0.0072941    0.0000632  EM
+             49 -0.11546370D+03    0.0066894    0.0000579  EM
+             50 -0.11545756D+03    0.0061415    0.0000532  EM
+             51 -0.11545192D+03    0.0056441    0.0000489  EM
+             52 -0.11544673D+03    0.0051920    0.0000450  EM
+             53 -0.11544195D+03    0.0047805    0.0000414  EM
+             54 -0.11543754D+03    0.0044053    0.0000382  EM
+             55 -0.11543348D+03    0.0040629    0.0000352  EM
+             56 -0.11542973D+03    0.0037499    0.0000325  EM
+             57 -0.11542626D+03    0.0034636    0.0000300  EM
+             58 -0.11542306D+03    0.0032012    0.0000277  EM
+             59 -0.11542010D+03    0.0029607    0.0000257  EM
+             60 -0.11541736D+03    0.0027398    0.0000237  EM
+             61 -0.11541483D+03    0.0025369    0.0000220  EM
+             62 -0.11541248D+03    0.0023502    0.0000204  EM
+             63 -0.11541030D+03    0.0021783    0.0000189  EM
+             64 -0.11540828D+03    0.0020200    0.0000175  EM
+             65 -0.11538126D+03    0.0270189    0.0002341  QN
+             66 -0.11538126D+03    0.0000000    0.0000000  EM
+
+
+   TECHNICAL 8 OUTPUT FOR THE H1 MODEL
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.17395937D+03    0.0000000    0.0000000  EM
+              2 -0.12794177D+03   46.0175911    0.2645307  EM
+              3 -0.12794177D+03    0.0000000    0.0000000  EM
+
+
+     Beginning Time:  17:11:50
+        Ending Time:  17:11:50
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

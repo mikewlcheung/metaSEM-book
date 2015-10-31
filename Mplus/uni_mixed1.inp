@@ -1,0 +1,22 @@
+TITLE:  Mixed-effects model: OC_alpha and JP_alpha as the predictors
+DATA:   FILE IS Jaramillo05.dat;	
+VARIABLE: NAMES id r r_v IDV OC_alpha JP_alpha;
+        USEVARIABLES ARE r OC_alpha JP_alpha w2;
+        MISSING ARE *;
+
+DEFINE: w2 = SQRT(r_v**(-1));   ! Weight for transformation           
+        r = w2*r;               ! Transformed r
+
+ANALYSIS: TYPE=RANDOM;          ! Use random slope analysis
+        ESTIMATOR=ML;           ! Use ML estimation
+
+MODEL:	
+        [r@0.0];                ! Intercept fixed at 0
+        r@1.0;                  ! Error variance fixed at 1
+        f | r ON w2;            ! f: Study specific random effects
+        f*;                     ! var(f): tau^2
+        [f*];                   ! beta_0
+        f ON OC_alpha JP_alpha; ! beta_1 and beta_2
+
+OUTPUT: SAMPSTAT;
+        CINTERVAL(symmetric);   ! Wald CI

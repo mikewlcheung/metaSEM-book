@@ -1,0 +1,226 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:  Fixed-effects model
+  DATA:   FILE IS Jaramillo05.dat;	
+  VARIABLE: NAMES id r r_v IDV OC_alpha JP_alpha;
+          USEVARIABLES ARE r w2;  ! Use both r and w2 in the analysis
+          MISSING ARE *;          ! Define missing values
+
+  DEFINE: w2 = SQRT(r_v**(-1));   ! Weight for transformation
+          r = w2*r;               ! Transformed r
+
+  MODEL:
+          [r@0.0];                ! Intercept fixed at 0
+          r@1.0;                  ! Error variance fixed at 1
+          r ON w2;                ! Common effect estimate beta_F
+
+  OUTPUT: SAMPSTAT;
+          CINTERVAL(symmetric);   ! Wald CI
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+Fixed-effects model
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          61
+
+Number of dependent variables                                    1
+Number of independent variables                                  1
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   R
+
+Observed independent variables
+   W2
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+
+Input data file(s)
+  Jaramillo05.dat
+
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              R             W2
+              ________      ________
+ R              1.000
+ W2             1.000         1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              R             W2
+              ________      ________
+      1         2.833        15.065
+
+
+           Covariances
+              R             W2
+              ________      ________
+ R              7.322
+ W2             7.809        33.574
+
+
+           Correlations
+              R             W2
+              ________      ________
+ R              1.000
+ W2             0.498         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -332.306
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     R                     2.833       1.989      -1.114    1.64%       0.629      1.854      2.321
+              61.000       7.322       6.934      15.860    1.64%       2.803      4.590
+     W2                   15.065       1.050       6.505    1.64%      10.193     13.107     13.915
+              61.000      33.574       1.295      35.244    1.64%      15.454     19.254
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        1
+
+Loglikelihood
+
+          H0 Value                        -225.750
+          H1 Value                        -138.581
+
+Information Criteria
+
+          Akaike (AIC)                     453.499
+          Bayesian (BIC)                   455.610
+          Sample-Size Adjusted BIC         452.464
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                            174.337
+          Degrees of Freedom                     2
+          P-Value                           0.0000
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           1.189
+          90 Percent C.I.                    1.043  1.341
+          Probability RMSEA <= .05           0.000
+
+CFI/TLI
+
+          CFI                                0.000
+          TLI                               -4.256
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                             17.393
+          Degrees of Freedom                     1
+          P-Value                           0.0000
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value                              0.518
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ R        ON
+    W2                 0.194      0.008     24.428      0.000
+
+ Intercepts
+    R                  0.000      0.000    999.000    999.000
+
+ Residual Variances
+    R                  1.000      0.000    999.000    999.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.100E+01
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ R        ON
+    W2               0.173       0.178       0.181       0.194       0.207       0.209       0.214
+
+ Intercepts
+    R                0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Residual Variances
+    R                1.000       1.000       1.000       1.000       1.000       1.000       1.000
+
+
+     Beginning Time:  17:11:40
+        Ending Time:  17:11:40
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

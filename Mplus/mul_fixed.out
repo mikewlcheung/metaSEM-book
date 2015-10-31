@@ -1,0 +1,265 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:  Fixed-effects model
+  DATA:   FILE IS wvs94a.dat;
+  VARIABLE: NAMES y1 y2 y1f1 y1f2 y2f2 GNP;
+      USEVARIABLES ARE y1 y2 y1f1 y1f2 y2f2;
+      MISSING ARE *;
+
+
+  MODEL:
+      y1 ON y1f1;            ! beta_{F,1} in the figure
+      y1 ON y1f2 (1);        ! beta_{F,2} in the figure
+      y2 ON y2f2 (1);        ! beta_{F,2} in the figure
+
+      [y1@0.0];              ! Intercept fixed at 0
+      [y2@0.0];              ! Intercept fixed at 0
+
+      y1@1.0                 ! Error variance fixed at 1
+      y2@1.0                 ! Error variance fixed at 1
+
+      y1 WITH y2@0;          ! Covariance fixed at 0
+
+  OUTPUT: SAMPSTAT;
+      CINTERVAL(symmetric);  ! Wald CI
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+Fixed-effects model
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          42
+
+Number of dependent variables                                    2
+Number of independent variables                                  3
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   Y1          Y2
+
+Observed independent variables
+   Y1F1        Y1F2        Y2F2
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+
+Input data file(s)
+  wvs94a.dat
+
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              Y1            Y2            Y1F1          Y1F2          Y2F2
+              ________      ________      ________      ________      ________
+ Y1             1.000
+ Y2             1.000         1.000
+ Y1F1           1.000         1.000         1.000
+ Y1F2           1.000         1.000         1.000         1.000
+ Y2F2           1.000         1.000         1.000         1.000         1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              Y1            Y2            Y1F1          Y1F2          Y2F2
+              ________      ________      ________      ________      ________
+      1        -0.418         1.271        19.323        -6.975        17.726
+
+
+           Covariances
+              Y1            Y2            Y1F1          Y1F2          Y2F2
+              ________      ________      ________      ________      ________
+ Y1             2.020
+ Y2             0.303         3.930
+ Y1F1           1.453         1.804        23.300
+ Y1F2          -1.157         0.028       -13.029        10.084
+ Y2F2           1.170         1.857        19.487        -9.967        16.646
+
+
+           Correlations
+              Y1            Y2            Y1F1          Y1F2          Y2F2
+              ________      ________      ________      ________      ________
+ Y1             1.000
+ Y2             0.108         1.000
+ Y1F1           0.212         0.189         1.000
+ Y1F2          -0.256         0.005        -0.850         1.000
+ Y2F2           0.202         0.230         0.989        -0.769         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -354.909
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y1                   -0.418      -0.409      -3.948    2.38%      -1.426     -0.632     -0.301
+              42.000       2.020       0.020       2.260    2.38%      -0.174      0.658
+     Y2                    1.271       0.145      -3.224    2.38%      -0.435      0.603      0.987
+              42.000       3.930      -0.431       5.284    2.38%       1.541      3.015
+     Y1F1                 19.323       1.133       9.141    2.38%      16.206     17.250     17.621
+              42.000      23.300       1.960      35.882    2.38%      18.175     22.592
+     Y1F2                 -6.975      -0.827     -16.011    2.38%      -9.358     -7.290     -6.394
+              42.000      10.084       0.990       0.040    2.38%      -6.083     -4.558
+     Y2F2                 17.726       1.066       8.564    2.38%      15.408     15.718     15.964
+              42.000      16.646       1.985      31.616    2.38%      17.412     20.896
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        2
+
+Loglikelihood
+
+          H0 Value                        -202.206
+          H1 Value                        -156.495
+
+Information Criteria
+
+          Akaike (AIC)                     408.412
+          Bayesian (BIC)                   411.887
+          Sample-Size Adjusted BIC         405.624
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                             91.422
+          Degrees of Freedom                     9
+          P-Value                           0.0000
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.467
+          90 Percent C.I.                    0.383  0.556
+          Probability RMSEA <= .05           0.000
+
+CFI/TLI
+
+          CFI                                0.000
+          TLI                              -10.884
+
+Chi-Square Test of Model Fit for the Baseline Model
+
+          Value                             12.394
+          Degrees of Freedom                     7
+          P-Value                           0.0883
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value                              0.281
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ Y1       ON
+    Y1F1               0.010      0.008      1.156      0.248
+    Y1F2               0.071      0.008      8.392      0.000
+
+ Y2       ON
+    Y2F2               0.071      0.008      8.392      0.000
+
+ Y1       WITH
+    Y2                 0.000      0.000    999.000    999.000
+
+ Intercepts
+    Y1                 0.000      0.000    999.000    999.000
+    Y2                 0.000      0.000    999.000    999.000
+
+ Residual Variances
+    Y1                 1.000      0.000    999.000    999.000
+    Y2                 1.000      0.000    999.000    999.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.453E+00
+       (ratio of smallest to largest eigenvalue)
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ Y1       ON
+    Y1F1            -0.012      -0.007      -0.004       0.010       0.023       0.026       0.031
+    Y1F2             0.049       0.054       0.057       0.071       0.085       0.087       0.093
+
+ Y2       ON
+    Y2F2             0.049       0.054       0.057       0.071       0.085       0.087       0.093
+
+ Y1       WITH
+    Y2               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Intercepts
+    Y1               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    Y2               0.000       0.000       0.000       0.000       0.000       0.000       0.000
+
+ Residual Variances
+    Y1               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    Y2               1.000       1.000       1.000       1.000       1.000       1.000       1.000
+
+
+     Beginning Time:  17:11:40
+        Ending Time:  17:11:40
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen

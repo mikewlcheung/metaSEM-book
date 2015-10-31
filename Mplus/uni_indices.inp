@@ -1,0 +1,23 @@
+TITLE: Calculate the Q statistic and the heterogeneity indices
+DATA:   FILE IS Jaramillo05.dat;	
+VARIABLE: NAMES id r r_v IDV OC_alpha JP_alpha;
+        USEVARIABLES ARE r w2;
+        MISSING ARE *;
+
+DEFINE: w2 = SQRT(r_v**(-1));   ! Weight for transformation           
+        r = w2*r;               ! Transformed r
+
+ANALYSIS: ESTIMATOR=ML;         ! Use ML estimation
+ 
+Model:		            
+        r ON w2;
+        [r@0.0];	            ! Intercept fixed at 0
+        r (var);                ! Estimated error variance
+
+MODEL CONSTRAINT:
+        NEW(Q I2);              ! Define functions of parameters
+                                ! There are 61 studies.
+        Q = 61*var;             ! Q statistic
+        I2 = 1-60/Q;            ! I2 index
+OUTPUT: SAMPSTAT;        
+        CINTERVAL(symmetric); 	! Wald CI

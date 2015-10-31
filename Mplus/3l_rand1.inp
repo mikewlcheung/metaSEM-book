@@ -1,0 +1,28 @@
+TITLE:	Random-effects model
+DATA:	FILE IS Bornmann07.dat;	
+VARIABLE: NAMES Cluster ID y v Year Fellow D_Phy D_Life D_Soc D_Mul 
+          C_USA C_Aus C_Can C_Eur C_UK;
+
+USEVARIABLES y w2;
+        cluster = Cluster ID;      ! Level 2: ID; Level 3: Cluster
+        within = y w2;             ! Define within level variables
+
+DEFINE: w2 = SQRT(v**(-1));
+        y = w2*y;
+                                   ! Use three-level modeling 
+ANALYSIS: TYPE=THREELEVEL RANDOM;  ! Activate random slope function
+        ESTIMATOR = ML;
+
+MODEL:	%WITHIN%
+        [y@0.0];
+        y@1.0;
+        f | y ON w2;               ! Define random slope
+
+        !%BETWEEN ID%              ! Level 2 variance
+        !f*;
+
+        !%BETWEEN Cluster%         ! Level 3 variance
+        !f*;
+
+OUTPUT: SAMPSTAT;
+        TECH1 TECH8;     

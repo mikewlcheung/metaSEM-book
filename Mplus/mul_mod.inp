@@ -1,0 +1,40 @@
+TITLE:  Mediation model on the "true" effect sizes
+DATA:   FILE IS wvs94a.dat;	
+VARIABLE: NAMES y1 y2 y1f1 y1f2 y2f2 GNP;
+    USEVARIABLES ARE ALL;
+    MISSING ARE *;
+
+ANALYSIS: TYPE=RANDOM;
+    ESTIMATOR=ML;          ! Use ML estimation
+    ALGORITHM=INTEGRATION;
+    PROCESSORS=4;          ! Use 4 processors to speed up the analysis
+    INTEGRATION=100;       ! Number of points for integration
+    CHOLESKY=ON;           ! Ensure the variances are positive definite
+
+MODEL:
+    f_LS | y1 ON y1f1;
+    f_LC | y1 ON y1f2;
+    f_LC | y2 ON y2f2;
+
+    [y1@0.0];              ! Intercept fixed at 0
+    [y2@0.0];              ! Intercept fixed at 0
+
+    y1@1.0                 ! Error variance fixed at 1
+    y2@1.0                 ! Error variance fixed at 1
+    
+    y1 WITH y2@0;          ! Covariance fixed at 0
+
+    f_LS*;                 ! tau^2_11
+    f_LC*;                 ! tau^2_22 
+
+    [f_LS*];               ! beta_10
+    [f_LC*];               ! beta_20
+
+    f_LC WITH GNP;
+
+    omega | f_LC XWITH GNP; ! Interaction between f_LC and GNP
+
+    f_LS ON GNP f_LC omega; 
+
+OUTPUT: SAMPSTAT;
+    CINTERVAL(symmetric); ! Wald CI

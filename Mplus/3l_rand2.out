@@ -1,0 +1,679 @@
+Mplus VERSION 7.31 (Linux)
+MUTHEN & MUTHEN
+09/19/2015   5:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:	Random-effects model: tau^2_3=tau^2_2
+  DATA:	FILE IS Bornmann07.dat;	
+  VARIABLE: NAMES Cluster ID y v Year Fellow D_Phy D_Life D_Soc D_Mul
+            C_USA C_Aus C_Can C_Eur C_UK;
+
+  USEVARIABLES y w2;
+          cluster = Cluster ID;      ! Level 2: ID; Level 3: Cluster
+          within = y w2;             ! Define within level variables
+
+  DEFINE: w2 = SQRT(v**(-1));
+          y = w2*y;
+                                     ! Use three-level modeling
+  ANALYSIS: TYPE=THREELEVEL RANDOM;  ! Activate random slope function
+          ESTIMATOR = ML;
+
+  MODEL:	%WITHIN%
+          [y@0.0];
+          y@1.0;
+          f | y ON w2;               ! Define random slope
+
+          %BETWEEN ID%               ! Level 2 variance
+          f* (1);                    ! tau^2_3=tau^2_2
+
+          %BETWEEN Cluster%          ! Level 3 variance
+          f* (1);
+
+  OUTPUT: SAMPSTAT;
+          TECH1 TECH8;
+
+
+
+*** WARNING in MODEL command
+  Variable on the left-hand side of an ON statement in a | statement is a
+  WITHIN variable.  The intercept for this variable is not random.
+  Variable:  Y
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+Random-effects model: tau^2_3=tau^2_2
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                          66
+
+Number of dependent variables                                    1
+Number of independent variables                                  1
+Number of continuous latent variables                            1
+
+Observed dependent variables
+
+  Continuous
+   Y
+
+Observed independent variables
+   W2
+
+Continuous latent variables
+   F
+
+Variables with special functions
+
+  Cluster variables     CLUSTER   ID
+
+  Within variables
+   Y           W2
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                   100
+Convergence criterion                                    0.100D-05
+Maximum number of EM iterations                                500
+Convergence criteria for the EM algorithm
+  Loglikelihood change                                   0.100D-02
+  Relative loglikelihood change                          0.100D-05
+  Derivative                                             0.100D-03
+Minimum variance                                         0.100D-03
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-02
+Optimization algorithm                                         EMA
+
+Input data file(s)
+  Bornmann07.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of ID clusters                 66
+     Number of CLUSTER clusters            21
+
+     Average cluster size for ID level        1.000
+
+     Estimated Intraclass Correlations for the Y Variables for ID level
+
+                Intraclass
+     Variable  Correlation
+
+
+     Average cluster size for CLUSTER level        3.143
+
+     Estimated Intraclass Correlations for the Y Variables for CLUSTER level
+
+                Intraclass
+     Variable  Correlation
+
+
+
+SAMPLE STATISTICS
+
+NOTE:  The sample statistics for within and between refer to the
+       maximum-likelihood estimated within and between covariance
+       matrices, respectively.
+
+
+     ESTIMATED SAMPLE STATISTICS FOR WITHIN
+
+
+           Means
+              Y             W2
+              ________      ________
+ 1             -0.356         8.621
+
+
+           Covariances
+              Y             W2
+              ________      ________
+ Y              3.307
+ W2             6.777        95.682
+
+
+           Correlations
+              Y             W2
+              ________      ________
+ Y              1.000
+ W2             0.381         1.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN ID
+
+
+           Means
+              Y             W2
+              ________      ________
+ 1              0.000         0.000
+
+
+           Covariances
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+           Correlations
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+     ESTIMATED SAMPLE STATISTICS FOR BETWEEN CLUSTER
+
+
+           Means
+              Y             W2
+              ________      ________
+ 1              0.000         0.000
+
+
+           Covariances
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+           Correlations
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y                    -0.356       0.400      -5.263    1.52%      -1.463     -0.843     -0.666
+              66.000       3.307       1.603       5.807    1.52%      -0.308      0.754
+     W2                    8.621       1.713       0.951    1.52%       1.725      2.783      4.718
+              66.000      95.682       1.712      35.436    1.52%       6.515     13.089
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        2
+
+Loglikelihood
+
+          H0 Value                        -120.149
+
+Information Criteria
+
+          Akaike (AIC)                     244.298
+          Bayesian (BIC)                   248.678
+          Sample-Size Adjusted BIC         242.381
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ Intercepts
+    Y                  0.000      0.000    999.000    999.000
+
+ Residual Variances
+    Y                  1.000      0.000    999.000    999.000
+
+Between ID Level
+
+ Variances
+    F                  0.007      0.003      2.455      0.014
+
+Between CLUSTER Level
+
+ Means
+    F                 -0.096      0.035     -2.775      0.006
+
+ Variances
+    F                  0.007      0.003      2.455      0.014
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.147E+00
+       (ratio of smallest to largest eigenvalue)
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1                  0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y                  0
+ W2                 0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1                  0             0             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               0             0             0             0
+ F%B3               0             0             0             0
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               0
+ F%B3               0             0
+ Y                  0             0             0
+ W2                 0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN ID
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1                  0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y                  0
+ W2                 0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1                  0             0             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               0             0             0             0
+ F%B3               0             0             0             0
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               1
+ F%B3               0             0
+ Y                  0             0             0
+ W2                 0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN CLUSTER
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1                  0             0
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y                  0
+ W2                 0             0
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1                  0             2             0             0
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               0             0             0             0
+ F%B3               0             0             0             0
+ Y                  0             0             0             0
+ W2                 0             0             0             0
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2               0
+ F%B3               0             1
+ Y                  0             0             0
+ W2                 0             0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1              0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           0.000
+ F%B3           0.000         0.000
+ Y              0.000         0.000         1.000
+ W2             0.000         0.000         0.000        47.841
+
+
+     STARTING VALUES FOR BETWEEN ID
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1              0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           1.000
+ F%B3           0.000         0.000
+ Y              0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000
+
+
+     STARTING VALUES FOR BETWEEN CLUSTER
+
+
+           NU
+              Y             W2
+              ________      ________
+ 1              0.000         0.000
+
+
+           LAMBDA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ Y              0.000         0.000         1.000         0.000
+ W2             0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y             W2
+              ________      ________
+ Y              0.000
+ W2             0.000         0.000
+
+
+           ALPHA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ 1              0.000         0.000         0.000         0.000
+
+
+           BETA
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           0.000         0.000         0.000         0.000
+ F%B3           0.000         0.000         0.000         0.000
+ Y              0.000         0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000
+
+
+           PSI
+              F%B2          F%B3          Y             W2
+              ________      ________      ________      ________
+ F%B2           0.000
+ F%B3           0.000         1.000
+ Y              0.000         0.000         0.000
+ W2             0.000         0.000         0.000         0.000
+
+
+TECHNICAL 8 OUTPUT
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.18834241D+03    0.0000000    0.0000000  EM
+              2 -0.16515980D+03   23.1826068    0.1230876  EM
+              3 -0.15083787D+03   14.3219244    0.0867156  EM
+              4 -0.14158448D+03    9.2533991    0.0613467  EM
+              5 -0.13530844D+03    6.2760332    0.0443271  EM
+              6 -0.13094866D+03    4.3597825    0.0322211  EM
+              7 -0.12788648D+03    3.0621845    0.0233846  EM
+              8 -0.12572050D+03    2.1659764    0.0169367  EM
+              9 -0.12417905D+03    1.5414461    0.0122609  EM
+             10 -0.12307576D+03    1.1032938    0.0088847  EM
+             11 -0.12228189D+03    0.7938687    0.0064502  EM
+             12 -0.12170796D+03    0.5739310    0.0046935  EM
+             13 -0.12129132D+03    0.4166421    0.0034233  EM
+             14 -0.12098779D+03    0.3035310    0.0025025  EM
+             15 -0.12076600D+03    0.2217910    0.0018332  EM
+             16 -0.12060352D+03    0.1624713    0.0013453  EM
+             17 -0.12048426D+03    0.1192675    0.0009889  EM
+             18 -0.12039655D+03    0.0877059    0.0007279  EM
+             19 -0.12033196D+03    0.0645907    0.0005365  EM
+             20 -0.12028433D+03    0.0476257    0.0003958  EM
+             21 -0.12024918D+03    0.0351525    0.0002922  EM
+             22 -0.12022321D+03    0.0259682    0.0002160  EM
+             23 -0.12020402D+03    0.0191974    0.0001597  EM
+             24 -0.12018982D+03    0.0142006    0.0001181  EM
+             25 -0.12017931D+03    0.0105098    0.0000874  EM
+             26 -0.12017152D+03    0.0077816    0.0000648  EM
+             27 -0.12016576D+03    0.0057638    0.0000480  EM
+             28 -0.12016149D+03    0.0042705    0.0000355  EM
+             29 -0.12015833D+03    0.0031650    0.0000263  EM
+             30 -0.12015598D+03    0.0023462    0.0000195  EM
+             31 -0.12015424D+03    0.0017396    0.0000145  EM
+             32 -0.12015295D+03    0.0012900    0.0000107  EM
+             33 -0.12015199D+03    0.0009568    0.0000080  EM
+             34 -0.12015119D+03    0.0007995    0.0000067  FS
+             35 -0.12015056D+03    0.0006347    0.0000053  FS
+             36 -0.12015041D+03    0.0001508    0.0000013  FS
+             37 -0.12015009D+03    0.0003219    0.0000027  FS
+             38 -0.12014998D+03    0.0001013    0.0000008  FS
+             39 -0.12014979D+03    0.0001912    0.0000016  FS
+             40 -0.12014972D+03    0.0000731    0.0000006  FS
+             41 -0.12014960D+03    0.0001167    0.0000010  FS
+             42 -0.12014955D+03    0.0000518    0.0000004  FS
+             43 -0.12014948D+03    0.0000723    0.0000006  FS
+             44 -0.12014944D+03    0.0000361    0.0000003  FS
+             45 -0.12014940D+03    0.0000453    0.0000004  FS
+             46 -0.12014937D+03    0.0000248    0.0000002  FS
+             47 -0.12014934D+03    0.0000286    0.0000002  FS
+             48 -0.12014933D+03    0.0000169    0.0000001  FS
+             49 -0.12014931D+03    0.0000182    0.0000002  FS
+             50 -0.12014930D+03    0.0000114    0.0000001  FS
+             51 -0.12014929D+03    0.0000117    0.0000001  FS
+             52 -0.12014928D+03    0.0000077    0.0000001  FS
+             53 -0.12014927D+03    0.0000075    0.0000001  FS
+             54 -0.12014927D+03    0.0000051    0.0000000  FS
+             55 -0.12014926D+03    0.0000048    0.0000000  FS
+             56 -0.12014926D+03    0.0000034    0.0000000  FS
+             57 -0.12014925D+03    0.0000031    0.0000000  FS
+             58 -0.12014925D+03    0.0000023    0.0000000  FS
+             59 -0.12014925D+03    0.0000020    0.0000000  FS
+             60 -0.12014925D+03    0.0000015    0.0000000  FS
+             61 -0.12014925D+03    0.0000013    0.0000000  FS
+             62 -0.12014925D+03    0.0000010    0.0000000  FS
+             63 -0.12014925D+03    0.0000009    0.0000000  FS
+             64 -0.12014924D+03    0.0000007    0.0000000  FS
+             65 -0.12014924D+03    0.0000006    0.0000000  FS
+             66 -0.12014924D+03    0.0000004    0.0000000  FS
+             67 -0.12014924D+03    0.0000004    0.0000000  FS
+             68 -0.12014924D+03    0.0000003    0.0000000  FS
+             69 -0.12014924D+03    0.0000002    0.0000000  FS
+             70 -0.12014924D+03    0.0000002    0.0000000  FS
+             71 -0.12014924D+03    0.0000002    0.0000000  FS
+             72 -0.12014924D+03    0.0000001    0.0000000  FS
+             73 -0.12014924D+03    0.0000001    0.0000000  FS
+             74 -0.12014924D+03    0.0000001    0.0000000  FS
+             75 -0.12014924D+03    0.0000001    0.0000000  FS
+             76 -0.12014924D+03    0.0000001    0.0000000  FS
+             77 -0.12014924D+03    0.0000000    0.0000000  FS
+             78 -0.12014924D+03    0.0000000    0.0000000  FS
+             79 -0.12014924D+03    0.0000000    0.0000000  FS
+             80 -0.12014924D+03    0.0000000    0.0000000  FS
+             81 -0.12014924D+03    0.0000000    0.0000000  FS
+             82 -0.12014924D+03    0.0000000    0.0000000  FS
+             83 -0.12014924D+03    0.0000000    0.0000000  FS
+             84 -0.12014924D+03    0.0000000    0.0000000  FS
+             85 -0.12014924D+03    0.0000000    0.0000000  EM
+             86 -0.12014924D+03    0.0000000    0.0000000  EM
+             87 -0.12014924D+03    0.0000000    0.0000000  EM
+             88 -0.12014924D+03    0.0000000    0.0000000  EM
+             89 -0.12014924D+03    0.0000000    0.0000000  EM
+             90 -0.12014924D+03    0.0000000    0.0000000  EM
+             91 -0.12014924D+03    0.0000000    0.0000000  EM
+             92 -0.12014924D+03    0.0000000    0.0000000  EM
+             93 -0.12014924D+03    0.0000000    0.0000000  EM
+             94 -0.12014924D+03    0.0000000    0.0000000  EM
+             95 -0.12014924D+03    0.0000000    0.0000000  EM
+             96 -0.12014924D+03    0.0000000    0.0000000  EM
+             97 -0.12014924D+03    0.0000000    0.0000000  EM
+             98 -0.12014924D+03    0.0000000    0.0000000  EM
+             99 -0.12014924D+03    0.0000000    0.0000000  EM
+            100 -0.12014924D+03    0.0000000    0.0000000  EM
+            101 -0.12014924D+03    0.0000000    0.0000000  EM
+            102 -0.12014924D+03    0.0000000    0.0000000  EM
+
+
+   TECHNICAL 8 OUTPUT FOR THE H1 MODEL
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.17395937D+03    0.0000000    0.0000000  EM
+              2 -0.12794177D+03   46.0175911    0.2645307  EM
+              3 -0.12794177D+03    0.0000000    0.0000000  EM
+
+
+     Beginning Time:  17:11:49
+        Ending Time:  17:11:50
+       Elapsed Time:  00:00:01
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2015 Muthen & Muthen
