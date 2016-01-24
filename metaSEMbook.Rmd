@@ -1,7 +1,7 @@
 ---
 title: 'Meta-Analysis: A Structural Equation Modeling Approach'
 author: "Mike Cheung"
-date: "31 Oct 2015"
+date: "24 Jan 2016"
 output:
   html_document:
     self_contained: yes
@@ -15,6 +15,11 @@ output:
 * This page collects the R code and Mplus input files used in Cheung (2015):
 * Cheung, M. W.-L. (2015). *Meta-analysis: A structural equation modeling approach*. Chichester, West Sussex: [John Wiley & Sons, Ltd](http://www.wiley.com/WileyCDA/WileyTitle/productCd-1119993431.html).
 * If you have any questions or comments, feel free to contact [me](http://courses.nus.edu.sg/course/psycwlm/Internet/).
+
+# An erratum
+
+## Equation 7.14
+* $\hat{\Lambda}_{2,2}$ is 0, not 1, i.e., ![Eq.7.14](./Eq7-14.png) (thanks Tom Palmer).
 
 # Chapter 3: Computing Effect Sizes for Meta-Analysis
 
