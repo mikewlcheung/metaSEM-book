@@ -1,7 +1,7 @@
 ---
 title: 'Meta-Analysis: A Structural Equation Modeling Approach'
 author: "Mike Cheung"
-date: "24 Jan 2016"
+date: "8 Apr 2016"
 output:
   html_document:
     self_contained: yes
