@@ -3,6 +3,6 @@
 * If you have any questions or comments, feel free to contact [me](http://courses.nus.edu.sg/course/psycwlm/Internet/).
 * View it in [markdown](https://github.com/mikewlcheung/metaSEM-book/blob/master/metaSEMbook.md) or [html preview](https://htmlpreview.github.io/?https://github.com/mikewlcheung/metaSEM-book/blob/master/metaSEMbook.html).
 * Reviews:
-    + [*Biometrics* (2017)](../reviews/Biometrics.pdf)
-    + [*International Statistical Review* (2016)](../reviews/insr12174.pdf)
+    + [*Biometrics* (2017)](metaSEM-book/blob/master/reviews/Biometrics.pdf)
+    + [*International Statistical Review* (2016)](metaSEM-book/blob/master/reviews/insr12174.pdf)
     * [Amazon (2015)](https://www.amazon.com/gp/customer-reviews/RJL7ZBCN4QLQO/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8&ASIN=1119993431)
