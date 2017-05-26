@@ -5,4 +5,4 @@
 * Reviews:
     + [*Biometrics* (2017)](https://github.com/mikewlcheung/metaSEM-book/blob/master/reviews/Biometrics.pdf)
     + [*International Statistical Review* (2016)](https://github.com/mikewlcheung/metaSEM-book/blob/master/reviews/insr12174.pdf)
-    * [Amazon (2015)](https://www.amazon.com/gp/customer-reviews/RJL7ZBCN4QLQO/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8&ASIN=1119993431)
+    * [Amazon customer review (2015)](https://www.amazon.com/gp/customer-reviews/RJL7ZBCN4QLQO/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8&ASIN=1119993431)
